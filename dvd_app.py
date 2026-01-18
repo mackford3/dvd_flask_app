@@ -12,8 +12,6 @@ Overall updates to make:
 4. Make it pretty
 5. Make it accessible anywhere
 Home Page: 
-1. Add a Count of Movies and Tv Shows
-2. Add the search bar to the main page 
 3. Show Titles that have blanks or nulls in their values
 4. Add rotating posters from tmdb
 Location Label Page:
