@@ -1,8 +1,9 @@
 from flask import Flask, render_template, request
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 import os 
+from pathlib import Path
 
 """
 Overall updates to make:
@@ -14,11 +15,14 @@ Home Page:
 1. Add a Count of Movies and Tv Shows
 2. Add the search bar to the main page 
 3. Show Titles that have blanks or nulls in their values
+4. Add rotating posters from tmdb
 Location Label Page:
 1. Add a QR Code page. So when I scan the location labels I will see what all is in that location
 """
 
-load_dotenv()
+dotenv_path = Path('.') / 'config' / '.env'
+
+load_dotenv(dotenv_path)
 
 app = Flask(__name__)
 
@@ -27,8 +31,6 @@ password = os.getenv('DB_PASS')
 host = os.getenv('DB_HOST')
 dbname = os.getenv('DB_NAME')
 schema = os.getenv('DB_SCHEMA')
-
-print(password)
 
 app.config['SQLALCHEMY_DATABASE_URI']=f'postgresql://{user}:{password}@{host}/{dbname}'
 
