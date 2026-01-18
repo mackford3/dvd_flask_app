@@ -2,10 +2,22 @@
 <html>
 <head><title>Home Page</title></head>
 <body>
+
     <h1>Media Catalog Dashboard</h1>
-    
+
+    <!--search section -->
+
+    <h2>Search by name</h2>
+    <form action="/search" method="GET">
+    <input type="text" name="name" placeholder="Search by name...">
+    <button type="submit">Search</button>
+
+    <p>To search by location go to the search page</p>
+
     <!-- Link to Search Page -->
     <p><a href="{{ url_for('search') }}">Go to Search Page</a></p>
+
+    <!--Recently added section -->
 
     <h3>Recently Added dvds</h3>
     <table border="1">
@@ -28,5 +40,15 @@
             {% endfor %}
         </tbody>
     </table>
+
+    <!--Stats section -->
+
+    <h1>Info on your media library</h1>
+    <div class="stats-section">
+        <p>Total Media in collection: {{ counts }}</p>
+        <p>Types of Media in collection: {{ types }}</p>
+        <p>Types of Genres in collection: {{ genres }}</p>
+        <p>Cost by type: {{costs}}</p>
+    </div>
 </body>
 </html>
