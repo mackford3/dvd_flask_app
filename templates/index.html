@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head><title>Home Page</title></head>
+<body>
+    <h1>Media Catalog Dashboard</h1>
+    
+    <!-- Link to Search Page -->
+    <p><a href="{{ url_for('search') }}">Go to Search Page</a></p>
+
+    <h3>Recently Added dvds</h3>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>type</th>
+                <th>location</th>
+                <th>purchase_date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dvd in dvds%}
+            <tr>
+                <td>{{ dvd['title'] }}</td>
+                <td>{{ dvd['type'] }}</td>
+                <td>{{ dvd['location_label'] }}</td>
+                <td>{{ dvd['purchase_date'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Location Search</title>
+    <style>
+        body { font-family: sans-serif; margin: 40px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f4f4f4; }
+    </style>
+</head>
+<body>
+    <h1>Search Locations</h1>
+    
+    <!-- Search Form -->
+    <form action="/search" method="GET">
+        <input type="text" name="name" placeholder="Search by name...">
+        <input type="text" name="location" placeholder="Search by location label...">
+        <button type="submit">Search</button>
+
+          <!-- The Clear Button: Just a link back to the search route -->
+        <a href="{{ url_for('search') }}">
+        <button type="button">Clear Filters</button>
+    </a>
+    </form>
+
+    <hr>
+
+    <!-- Results Table -->
+
+    <table border="1">
+        <thead>
+            <tr>    
+                <th>Title</th>
+                <th>Season Name</th>
+                <th>Type</th>
+                <th>Genre</th>
+                <th>Disk Type</th>
+                <th>Location</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dvds in search_dvds %}
+            <tr>
+                <td>{{ dvds['title'] }}</td>
+                <td>{{ dvds['season_name'] }}</td>
+                <td>{{ dvds['type'] }}</td>
+                <td>{{ dvds['genre'] }}</td>
+                <td>{{ dvds['disk_type'] }}</td>
+                <td>{{ dvds['location_label'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+</body>
+</html>
