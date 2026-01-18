@@ -28,5 +28,13 @@
             {% endfor %}
         </tbody>
     </table>
+
+    <h1>Info on your media library</h1>
+    <div class="stats-section">
+        <p>Total Media in collection: {{ counts }}</p>
+        <p>Types of Media in collection: {{ types }}</p>
+        <p>Types of Genres in collection: {{ genres }}</p>
+        <p>Cost by type: {{costs}}</p>
+    </div>
 </body>
 </html>

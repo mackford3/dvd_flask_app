@@ -81,20 +81,62 @@ def get_base_query():
     left join media_catalog.purchase_info pi on di.id = pi.dvd_item_id
         """
 
+# Creating the home page
+
 @app.route('/')
     ##This method uses full sql to get the data
 def index():
 
-    # Use full SQL with schema prefixes for your 3-table join
+    # This is the sql for the most reent dvds added
     sql = get_base_query() + "where pi.purchase_date <> '9999-12-31' and pi.purchase_date is not null order by pi.purchase_date desc limit 10"
     # execute() returns a Result object
     results = db.session.execute(text(sql))
-    
     dvd_data = results.mappings().all()
     # print(f"DEBUG: found {len(dvd_data)}")
     # print(f"DEBUG: First row keys: {dvd_data[0].keys() if results else 'NO DATA'}")
     
-    return render_template('index.html', dvds=dvd_data)
+    # -- Stats Section -- #
+    ## -- Counts --##
+    sql2 = get_base_query()
+    final_sql = f""" select count(*) 
+                    from ({sql2}) as sub 
+                    where 1=1 
+                    """
+    count_results = db.session.execute(text(final_sql)).mappings().all()
+
+    ## -- types of Media -- ##
+    sql2 = get_base_query()
+    final_sql = f""" select type, count(type) 
+                    from ({sql2}) as sub 
+                    where 1=1 
+                    group by type
+                    """
+    type_results = db.session.execute(text(final_sql)).mappings().all()
+
+    ## -- types of Genres -- ##
+    sql2 = get_base_query()
+    final_sql = f""" select genre, count(genre) 
+                    from ({sql2}) as sub 
+                    where 1=1 
+                    group by genre
+                    """
+    genre_results = db.session.execute(text(final_sql)).mappings().all()
+
+    ## -- total Cost -- ##
+    sql2 = get_base_query()
+    final_sql = f""" select sum(cost), type 
+                    from ({sql2}) as sub 
+                    where 1=1 
+                    group by type
+                    """
+    cost_results = db.session.execute(text(final_sql)).mappings().all()
+
+    return render_template('index.html', dvds=dvd_data, 
+                           counts=count_results, 
+                           types=type_results, 
+                           genres=genre_results,
+                           costs=cost_results
+                           )
 
 @app.route('/search')
 def search():
