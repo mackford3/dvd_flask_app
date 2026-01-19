@@ -11,7 +11,7 @@ Overall updates to make:
 Home Page: 
 3. Show Titles that have blanks or nulls in their values
 4. Add rotating posters from tmdb
-5. update the stats for genre 
+7. Add Hero video to banner
 Add Data Page: 
 1. TBD Add data
 Search Page: 

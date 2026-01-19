@@ -224,3 +224,70 @@ body {
     text-decoration: underline;
 }
 
+/* Hero Container */
+.hero-header {
+    position: relative;
+    height: 300px;
+    width: 100%;
+    margin-bottom: -60px; /* Overlaps slightly with your stats for depth */
+    overflow: hidden;
+    border-radius: 0 0 40px 40px;
+    background: #0f172a; /* Fallback color */
+}
+
+/* Background Media (Video or Image) */
+/* The main wrapper */
+.hero-section {
+    position: relative;
+    width: 100%;
+    height: 350px; /* Adjust height to your liking */
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 30px;
+}
+
+/* Make the image fill the whole background */
+.hero-media-wrapper, .hero-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Dim the image so text is readable */
+.hero-image {
+    filter: brightness(0.4);
+}
+
+/* This puts the search box on top of the image */
+.search-overlay {
+    position: relative;
+    z-index: 10; /* Ensures it sits above the image */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    text-align: center;
+    color: white;
+}
+
+/* Style the search container to be slightly transparent (Glassmorphism) */
+.search-overlay .search-container {
+    background: rgba(30, 41, 59, 0.6); /* Translucent dark blue */
+    backdrop-filter: blur(10px); /* Frosted glass effect */
+    padding: 30px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 80%;
+    max-width: 600px;
+}
+
+/* Ensure the header title inside the hero is white */
+.search-overlay h1 {
+    color: white;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+}

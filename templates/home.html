@@ -3,20 +3,27 @@
 
 {% block content %}
 
-    <header>
-        <h1>Media Catalog Dashboard</h1>
-    </header>
+<!-- The parent container that holds everything -->
+<div class="hero-section">
+    
+    <!-- The Background Image -->
+    <div class="hero-media-wrapper">
+        <img src="{{ url_for('static', filename='img/jeremy-yap-J39X2xX_8CQ-unsplash.jpg') }}" alt="Cinema" class="hero-image">
+    </div>
 
-    <!--search section -->
-    <section class="search-container">
-        <h2>Find Media</h2>
-        <form action="/search" method="GET">
-            <input type="text" name="name" placeholder="Search by name...">
-            <button type="submit">Search</button>
-        </form>
-    <!-- Link to Search Page -->
-    <p><a class="link-btn"  href="{{ url_for('search') }}"> Advanced:Search by location</a></p>
-    </section>
+    <!-- The Search Container (now positioned on top) -->
+    <div class="search-overlay">
+        <h1>Media Catalog Dashboard</h1>
+        <section class="search-container">
+            <h2>Find Media</h2>
+            <form action="/search" method="GET">
+                <input type="text" name="name" placeholder="Search by name...">
+                <button type="submit">Search</button>
+            </form>
+            <p><a class="link-btn" href="{{ url_for('search') }}">Advanced: Search by location</a></p>
+        </section>
+    </div>
+</div>
 
     <!--Recently added section -->
 
