@@ -185,3 +185,42 @@ body {
     border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
+/* Section for Hover on TMDB Recently added Styling */
+
+/* Link Styling */
+.movie-link {
+    text-decoration: none;
+    color: var(--accent-color);
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.2s ease;
+}
+
+/* The 'View on TMDB' tooltip */
+.hover-tip {
+    visibility: hidden;
+    font-size: 0.65rem;
+    background: #01b4e4; /* TMDB Blue */
+    color: #0d253f;    /* TMDB Dark Blue */
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: bold;
+    text-transform: uppercase;
+    opacity: 0;
+    transform: translateY(5px);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Reveal on Hover */
+.movie-link:hover .hover-tip {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.movie-link:hover strong {
+    text-decoration: underline;
+}
+

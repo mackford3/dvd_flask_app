@@ -76,7 +76,8 @@ def get_base_query():
 		di.category,
 		mt.complete_collection,
         di.disk_type,
-		di.file_size
+		di.file_size,
+        coalesce(di.tmdb_id,mt.tmdb_id) as tmdb_id
     from {schema}.media_titles mt 
     join {schema}.dvd_items di on di.media_title_id  = mt.id
     left join {schema}.purchase_info pi on di.id = pi.dvd_item_id
@@ -149,8 +150,8 @@ def home():
                     """
     cost_store_results = db.session.execute(text(sql)).mappings().all()
 
-    print(f"DEBUG: SQL: {sql}")
-    print(f"DEBUG: First row keys: {dvd_data[0].keys() if cost_store_results else 'NO DATA'}")
+    # print(f"DEBUG: SQL: {sql}")
+    # print(f"DEBUG: First row keys: {dvd_data[0].keys() if cost_store_results else 'NO DATA'}")
 
     return render_template('home.html', dvds=dvd_data, 
                            counts=count_results, 

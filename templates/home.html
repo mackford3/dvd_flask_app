@@ -32,13 +32,22 @@
             </tr>
         </thead>
         <tbody>
-            {% for dvd in dvds%}
+            <!-- Adding a Hover to show TMDB in recently added -->
+            {% for dvd in dvds %}
             <tr>
-                <td><strong>{{ dvd['title'] }}</strong></td>
-                <td>{{ dvd['season_name'] }}</td>
-                <td>{{ dvd['type'] }}</td>
-                <td><code>{{ dvd['disk_type'] }}</code></td>
-                <td>{{ dvd['purchase_date'] }}</td>
+                <td class="title-cell">
+                    {% set base_url = "https://www.themoviedb.org/movie/" if dvd['type'] == 'movie' else "https://www.themoviedb.org/tv/" %}
+                     <a href="{{ base_url }}{{ dvd['tmdb_id'] }}" 
+                        target="_blank" 
+                        class="movie-link">
+                        <strong>{{ dvd['title'] }}</strong>
+                        <span class="hover-tip">View on TMDB ↗</span>
+                        </a>
+                    </td>
+                    <td>{{ dvd['season_name'] }}</td>
+                    <td>{{ dvd['type'] }}</td>
+                    <td><code>{{ dvd['location_label'] }}</code></td>
+                    <td>{{ dvd['purchase_date'] }}</td>
             </tr>
             {% endfor %}
         </tbody>
