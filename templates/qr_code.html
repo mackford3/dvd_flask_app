@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Location Results</title>
+</head>
+<body>
+    <h1>QR Code Results</h1>
+    <h2>Location: {{ param['loc'] }}</h2>
+
+    <p>Total number of items in location: {{counts[0].count}}</p> <!--Since this is a dictionary inside a list I can do index key pair results-->
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Location</th>
+                <th>Title</th>
+                <th>Sub Title</th>
+                <th>Type</th>
+                <th>Disk Type</th>
+                
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in box_results%}
+            <tr>
+                <td>{{ item['location_label'] }}</td>
+                <td>{{ item['title'] }}</td>
+                <td>{{ item['season_name'] }}</td>
+                <td>{{ item['type'] }}</td>
+                <td>{{ item['disk_type'] }}</td>
+                
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
