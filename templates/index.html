@@ -45,10 +45,21 @@
 
     <h1>Info on your media library</h1>
     <div class="stats-section">
-        <p>Total Media in collection: {{ counts }}</p>
-        <p>Types of Media in collection: {{ types }}</p>
-        <p>Types of Genres in collection: {{ genres }}</p>
+        <p>Total Media in collection: {{ counts[0].count }}</p>
+        <p>Types of Media in collection:
+        <ul>
+        {% for item in types %}
+            <li>{{ item.type }}: {{ item.count }}</li>
+        {% endfor %}
+        </ul>
+        <p>Types of Genres in collection:</p>
+        {% for item in genres %}
+            <li>{{ item.genre }}: {{ item.count }}</li>
+        {% endfor %}
         <p>Cost by type: {{costs}}</p>
+        {% for item in costs %}
+            <li> {{ item.type }}:{{ item.sum }}</li>
+        {% endfor %}
     </div>
 </body>
 </html>
