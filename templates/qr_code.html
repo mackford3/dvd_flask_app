@@ -8,6 +8,30 @@
         <h2>Location: {{ param['loc'] }}</h2>
 
         <p>Total number of items in location: {{counts[0].count}}</p> <!--Since this is a dictionary inside a list I can do index key pair results-->
+       
+
+    <!-- 2. Swipeable Carousel Section -->
+    <h2 style="font-size: 1rem; color: var(--text-dim); margin-bottom: 10px;">Media Covers (Swipe)</h2>
+    <div class="stat-carousel">
+        
+        <!-- Movie Poster Card -->
+        <div class="carousel-card">
+             {% for dvd in box_results% %}
+            <tr>
+                <td class="title-cell">
+                    {% set base_url = "https://www.themoviedb.org/movie/" if dvd['type'] == 'movie' else "https://www.themoviedb.org/tv/" %}
+                     <a href="{{ base_url }}{{ dvd['tmdb_id'] }}" 
+                        target="_blank" 
+                        class="movie-link">
+                        <span class="hover-tip">{{ dvd['title']}} ↗</span>
+                        </a>
+                    </td>
+            </tr>
+            {% endfor %}
+        </div>
+
+    </div>
+       
         <table>
             <thead>
                 <tr>
