@@ -1,39 +1,32 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Location Search</title>
-    <style>
-        body { font-family: sans-serif; margin: 40px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f4f4f4; }
-    </style>
-</head>
-<body>
-    <h1>Search Locations</h1>
+{% extends "layout.html" %}
+
+
+{% block content %}
+
+
+    <header>
+        <h1>Media Catalog Search</h1>
+    </header>
     
     <!-- Search Form -->
-    <form action="/search" method="GET">
-        <input type="text" name="name" placeholder="Search by name...">
-        <input type="text" name="location" placeholder="Search by location label...">
-        <button type="submit">Search</button>
+    <section class="search-container">
+        <h2>Find Media</h2>
+        <form action="/search" method="GET">
+            <input type="text" name="name" placeholder="Search by name...">
+            <input type="text" name="location" placeholder="Search by location label...">
+            <button type="submit">Search</button>
+            <!-- The Clear Button: Just a link back to the search route -->
+            <a href="{{ url_for('search') }}"><button type="button">Clear Filters</button></a>
+        </form>
+    </section>
 
-          <!-- The Clear Button: Just a link back to the search route -->
-        <a href="{{ url_for('search') }}">
-        <button type="button">Clear Filters</button>
-    </a>
-    </form>
-
-    <hr>
-
+    <h3>Results</h4>
     <!-- Results Table -->
-
-    <table border="1">
+    <table>
         <thead>
             <tr>    
                 <th>Title</th>
-                <th>Season Name</th>
+                <th>Sub Title</th>
                 <th>Type</th>
                 <th>Genre</th>
                 <th>Disk Type</th>
@@ -43,7 +36,7 @@
         <tbody>
             {% for dvds in search_dvds %}
             <tr>
-                <td>{{ dvds['title'] }}</td>
+                <td><strong>{{ dvds['title'] }}</strong></td>
                 <td>{{ dvds['season_name'] }}</td>
                 <td>{{ dvds['type'] }}</td>
                 <td>{{ dvds['genre'] }}</td>
@@ -54,5 +47,4 @@
         </tbody>
     </table>
     
-</body>
-</html>
+{% endblock %}

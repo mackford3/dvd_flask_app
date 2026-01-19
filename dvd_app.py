@@ -7,14 +7,15 @@ from pathlib import Path
 
 """
 Overall updates to make:
-2. add a footer
-3. add a header or hamberger menu
-4. Make it pretty
 5. Make it accessible anywhere
 Home Page: 
 3. Show Titles that have blanks or nulls in their values
 4. Add rotating posters from tmdb
 5. update the stats for genre 
+Add Data Page: 
+1. TBD Add data
+Search Page: 
+1. Order by title in search query 
 Location Label Page:
 1. Add a QR Code page. So when I scan the location labels I will see what all is in that location
 2. Add the scanned value into the page
@@ -85,7 +86,7 @@ def get_base_query():
 
 @app.route('/')
     ##This method uses full sql to get the data
-def index():
+def home():
 
     # This is the sql for the most reent dvds added
     sql = get_base_query() + "where pi.purchase_date <> '9999-12-31' and pi.purchase_date is not null order by pi.purchase_date desc limit 10"
@@ -131,7 +132,7 @@ def index():
                     """
     cost_results = db.session.execute(text(final_sql)).mappings().all()
 
-    return render_template('index.html', dvds=dvd_data, 
+    return render_template('home.html', dvds=dvd_data, 
                            counts=count_results, 
                            types=type_results, 
                            genres=genre_results,
