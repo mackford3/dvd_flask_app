@@ -14,8 +14,10 @@ Overall updates to make:
 Home Page: 
 3. Show Titles that have blanks or nulls in their values
 4. Add rotating posters from tmdb
+5. update the stats for genre 
 Location Label Page:
 1. Add a QR Code page. So when I scan the location labels I will see what all is in that location
+2. Add the scanned value into the page
 """
 
 dotenv_path = Path('.') / 'config' / '.env'
@@ -79,7 +81,7 @@ def get_base_query():
     left join media_catalog.purchase_info pi on di.id = pi.dvd_item_id
         """
 
-# Creating the home page
+# -- Creating the home page -- #
 
 @app.route('/')
     ##This method uses full sql to get the data
@@ -136,6 +138,8 @@ def index():
                            costs=cost_results
                            )
 
+# -- Creating the Search Page -- #
+
 @app.route('/search')
 def search():
     # Capture multiple search inputs from the URL/Form
@@ -162,6 +166,31 @@ def search():
     results = db.session.execute(text(final_sql), params).mappings().all()
     
     return render_template('search.html', search_dvds=results)
+
+# -- Created the QR Code Results Page -- #
+@app.route('/qr')
+def qr():
+    # Capture multiple search inputs from the URL/Form
+    location_query = request.args.get('location', '')
+
+    # Start with base query, make it a subquery to make filtering easier
+    base_sql = get_base_query() 
+    
+    # dynamic case insinsitive search
+    final_sql = f"SELECT * FROM ({base_sql}) as sub WHERE 1=1"
+    params = {}
+        
+    if location_query:
+        final_sql += " AND location_label ILIKE :loc"
+        params['loc'] = f"%{location_query}%"
+
+    # 4. Execute and get results
+    results = db.session.execute(text(final_sql), params).mappings().all()
+
+    count_sql = f"select count(*) from ({base_sql} where location_label ILIKE :loc)"
+    count_results = db.session.execute(text(count_sql),params).mappings().all()
+    
+    return render_template('qr_code.html', box_results=results, counts=count_results, param=params)
 
 if __name__ == '__main__':
     app.run(debug=True)
