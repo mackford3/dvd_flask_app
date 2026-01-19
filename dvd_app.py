@@ -39,7 +39,7 @@ db=SQLAlchemy(app)
 with app.app_context():
     # Loads all table structures into db.metadata
     db.metadata.reflect(bind=db.engine,schema=schema)
-    print(db.metadata.tables.keys())
+    # print(f"DEBUG: {db.metadata.tables.keys()}")
 
 # Access a specific reflected table
 class Titles(db.Model):
@@ -53,7 +53,7 @@ class Purchases(db.Model):
 
 # A helper function to get the base "joined" query
 def get_base_query():
-    return """
+    return f"""
    select 	mt.id as media_title_id,  
 		di.media_title_id as dvd_med_id,
 		di.id as dvd_id,
@@ -77,9 +77,9 @@ def get_base_query():
 		mt.complete_collection,
         di.disk_type,
 		di.file_size
-    from media_catalog.media_titles mt 
-    join media_catalog.dvd_items di on di.media_title_id  = mt.id
-    left join media_catalog.purchase_info pi on di.id = pi.dvd_item_id
+    from {schema}.media_titles mt 
+    join {schema}.dvd_items di on di.media_title_id  = mt.id
+    left join {schema}.purchase_info pi on di.id = pi.dvd_item_id
         """
 
 # -- Creating the home page -- #
@@ -96,8 +96,8 @@ def home():
     # print(f"DEBUG: found {len(dvd_data)}")
     # print(f"DEBUG: First row keys: {dvd_data[0].keys() if results else 'NO DATA'}")
     
-    # -- Stats Section -- #
-    ## -- Counts --##
+    # -- 1. Stats Section -- #
+    # --- Counts ---##
     sql2 = get_base_query()
     final_sql = f""" select count(*) 
                     from ({sql2}) as sub 
@@ -105,7 +105,7 @@ def home():
                     """
     count_results = db.session.execute(text(final_sql)).mappings().all()
 
-    ## -- types of Media -- ##
+    # --- types of Media --- #
     sql2 = get_base_query()
     final_sql = f""" select type, count(type) 
                     from ({sql2}) as sub 
@@ -114,7 +114,7 @@ def home():
                     """
     type_results = db.session.execute(text(final_sql)).mappings().all()
 
-    ## -- types of Genres -- ##
+    # --- types of Genres --- #
     sql2 = get_base_query()
     final_sql = f""" select genre, count(genre) 
                     from ({sql2}) as sub 
@@ -123,7 +123,7 @@ def home():
                     """
     genre_results = db.session.execute(text(final_sql)).mappings().all()
 
-    ## -- total Cost -- ##
+    # --- total Cost --- #
     sql2 = get_base_query()
     final_sql = f""" select sum(cost), type 
                     from ({sql2}) as sub 
@@ -131,12 +131,34 @@ def home():
                     group by type
                     """
     cost_results = db.session.execute(text(final_sql)).mappings().all()
+    
+    # ---- Cost by Disk Type ---- #
+    sql2 = get_base_query()
+    final_sql = f""" select sum(cost), disk_type 
+                    from ({sql2}) as sub 
+                    where 1=1 
+                    group by disk_type
+                    """
+    cost_disk_results = db.session.execute(text(final_sql)).mappings().all()
+
+    # ---- Cost by Store ---- #
+    sql =  f""" select 	sum (cost) , store 
+                from {schema}.purchase_info pi 
+                group by store
+                order by store;
+                    """
+    cost_store_results = db.session.execute(text(sql)).mappings().all()
+
+    print(f"DEBUG: SQL: {sql}")
+    print(f"DEBUG: First row keys: {dvd_data[0].keys() if cost_store_results else 'NO DATA'}")
 
     return render_template('home.html', dvds=dvd_data, 
                            counts=count_results, 
                            types=type_results, 
                            genres=genre_results,
-                           costs=cost_results
+                           costs=cost_results,
+                           cost_disks=cost_disk_results,
+                           cost_stores=cost_store_results
                            )
 
 # -- Creating the Search Page -- #

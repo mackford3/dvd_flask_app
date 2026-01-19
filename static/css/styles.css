@@ -137,3 +137,51 @@ tr:hover { background-color: #2d3a4f; }
 body {
     padding-bottom: 100px;
 }
+
+/* Container for the two main top cards */
+.top-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+/* The Carousel Wrapper */
+.stat-carousel {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory; /* This creates the 'snap' effect */
+    gap: 20px;
+    padding-bottom: 15px;
+    scrollbar-width: none; /* Hides scrollbar for clean look on Firefox */
+}
+
+.stat-carousel::-webkit-scrollbar {
+    display: none; /* Hides scrollbar for Chrome/Safari */
+}
+
+/* Ensure cards in the carousel have a fixed size */
+.carousel-card {
+    flex: 0 0 85%; /* Shows 85% of the card so you can see the next one peaking */
+    scroll-snap-align: center;
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 15px;
+    border-left: 4px solid var(--accent-color);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+/* Styling for lists inside cards */
+.stat-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.stat-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
