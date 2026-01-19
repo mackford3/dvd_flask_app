@@ -137,3 +137,157 @@ tr:hover { background-color: #2d3a4f; }
 body {
     padding-bottom: 100px;
 }
+
+/* Container for the two main top cards */
+.top-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+/* The Carousel Wrapper */
+.stat-carousel {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory; /* This creates the 'snap' effect */
+    gap: 20px;
+    padding-bottom: 15px;
+    scrollbar-width: none; /* Hides scrollbar for clean look on Firefox */
+}
+
+.stat-carousel::-webkit-scrollbar {
+    display: none; /* Hides scrollbar for Chrome/Safari */
+}
+
+/* Ensure cards in the carousel have a fixed size */
+.carousel-card {
+    flex: 0 0 85%; /* Shows 85% of the card so you can see the next one peaking */
+    scroll-snap-align: center;
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 15px;
+    border-left: 4px solid var(--accent-color);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+/* Styling for lists inside cards */
+.stat-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.stat-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+/* Section for Hover on TMDB Recently added Styling */
+
+/* Link Styling */
+.movie-link {
+    text-decoration: none;
+    color: var(--accent-color);
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.2s ease;
+}
+
+/* The 'View on TMDB' tooltip */
+.hover-tip {
+    visibility: hidden;
+    font-size: 0.65rem;
+    background: #01b4e4; /* TMDB Blue */
+    color: #0d253f;    /* TMDB Dark Blue */
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: bold;
+    text-transform: uppercase;
+    opacity: 0;
+    transform: translateY(5px);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Reveal on Hover */
+.movie-link:hover .hover-tip {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.movie-link:hover strong {
+    text-decoration: underline;
+}
+
+/* Hero Container */
+.hero-header {
+    position: relative;
+    height: 300px;
+    width: 100%;
+    margin-bottom: -60px; /* Overlaps slightly with your stats for depth */
+    overflow: hidden;
+    border-radius: 0 0 40px 40px;
+    background: #0f172a; /* Fallback color */
+}
+
+/* Background Media (Video or Image) */
+/* The main wrapper */
+.hero-section {
+    position: relative;
+    width: 100%;
+    height: 350px; /* Adjust height to your liking */
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 30px;
+}
+
+/* Make the image fill the whole background */
+.hero-media-wrapper, .hero-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Dim the image so text is readable */
+.hero-image {
+    filter: brightness(0.4);
+}
+
+/* This puts the search box on top of the image */
+.search-overlay {
+    position: relative;
+    z-index: 10; /* Ensures it sits above the image */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    text-align: center;
+    color: white;
+}
+
+/* Style the search container to be slightly transparent (Glassmorphism) */
+.search-overlay .search-container {
+    background: rgba(30, 41, 59, 0.6); /* Translucent dark blue */
+    backdrop-filter: blur(10px); /* Frosted glass effect */
+    padding: 30px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 80%;
+    max-width: 600px;
+}
+
+/* Ensure the header title inside the hero is white */
+.search-overlay h1 {
+    color: white;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+}

@@ -6,8 +6,12 @@ __pycache__/
 
 #folders 
 config/
+static/img/
+static/video/
 
+#files
 requirements.txt
+
 
 # C extensions
 *.so
