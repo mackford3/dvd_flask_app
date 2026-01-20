@@ -11,6 +11,8 @@ static/video/
 
 #files
 requirements.txt
+test.*
+utilities.*
 
 
 # C extensions
