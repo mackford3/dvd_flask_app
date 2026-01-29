@@ -267,7 +267,7 @@ def add_media():
             db.session.add(new_dvd)
             db.session.commit()
 
-            new_id = new_dvd.id
+            dvd_id = new_dvd.id
 
         # Check if the "Purchase Form" was submitted
         elif 'submit_purchase' in request.form:
@@ -282,10 +282,10 @@ def add_media():
             db.session.add(new_purchase)
             db.session.commit()
 
-            new_id = new_purchase.id
+            purch_id = new_purchase.id
 
     # Re-render the same page with the new ID available to show the next section
-    return render_template('add_media.html', movie_id=new_id)
+    return render_template('add_media.html', movie_id=new_id, dvd_id=dvd_id)
 
 
 
