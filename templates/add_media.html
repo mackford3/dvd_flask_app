@@ -13,7 +13,7 @@
         
     <!-- Media Card -->
     <div class="carousel-card">
-        <form>
+        <form method="post">
         <!-- Table 1: Media Details -->
             <fieldset>
                 <legend>Media Information</legend>
@@ -44,13 +44,13 @@
 
                 <div class="form-group">
                     <label>Ongoing?</label>
-                    <input type="checkbox" name="ongoing_ind" id="ongoing_ind" required>
+                    <input type="checkbox" name="ongoing_ind" id="ongoing_ind">
                     
                 </div>
 
                 <div class="form-group">
                     <label>Complete Collection?</label>
-                    <input type="checkbox" name="complete_collection" id="complete_collection" required>
+                    <input type="checkbox" name="complete_collection" id="complete_collection">
                 </div>
 
                 <div class="form-group">
@@ -63,13 +63,21 @@
                     <input type="text" name="tmdb_id" id="tmdb_id" >
                 </div>
             </fieldset>
-            <button type="submit">Save Record to Media Table</button>
+            <button type="submit" name="submit_media">Save Record to Media Table</button>
             <button type="Next" style="display: none;">Next to New DVD Item</button>
         </form>
+
+        {% if movie_id %}
+        <div style="background-color: #d4edda; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p>Success! Your entry has been created.</p>
+            <h2>The generated ID is: {{ movie_id }}</h2>
+        </div>
+        {% endif %}
+
     </div>
 
     <div class="carousel-card">
-        <form>
+        <form method="post">
             <!-- Table 2: DVD Item Details -->
             <fieldset>
                 <legend>DVD Specifics</legend>
@@ -164,13 +172,19 @@
                 </div>
                 
             </fieldset>
-            <button type="submit">Save Record to DVD Table</button>
+            <button type="submit" name="submit_dvd">Save Record to DVD Table</button>
             <button type="Next" style="display: none;">Next to Purchase Info</button>
         </form>
+        {% if movie_id %}
+        <div style="background-color: #d4edda; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p>Success! Your entry has been created.</p>
+            <h2>The generated ID is: {{ movie_id }}</h2>
+        </div>
+        {% endif %}
     </div>
 
     <div class="carousel-card">
-        <form>
+        <form method="post">
             <!-- Table 3: Purchase Details -->
             <fieldset>
                 <legend>Purchase History</legend>
@@ -203,7 +217,7 @@
                     <input type="text" name="notes" id="notes">
                 </div>
             </fieldset>
-            <button type="submit">Save Record to Purchase Table</button>
+            <button type="submit" name="submit_purchase">Save Record to Purchase Table </button>
         </form>
     </div>
 </div>

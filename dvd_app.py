@@ -42,6 +42,7 @@ with app.app_context():
     # print(f"DEBUG: {db.metadata.tables.keys()}")
 
 # Access a specific reflected table
+## This section below tells the different tables in the database as individual classes.
 class Titles(db.Model):
     __table__ = db.metadata.tables[f'{schema}.media_titles']
 
@@ -216,10 +217,76 @@ def qr():
     
     return render_template('qr_code.html', box_results=results, counts=count_results, param=params)
 
-@app.route('/add_media')
+@app.route('/add_media', methods=['GET', 'POST'])
 def add_media():
+    new_id = None
+    if request.method == 'POST':
+        
+        # Check if the "Media Form" was submitted
+        if 'submit_media' in request.form:
+            new_id = None
 
-    return render_template('add_media.html')
+            is_ongoing = request.form.get('ongoing_ind')=='on'
+            is_complete = request.form.get('complete_collection')=='on'
+
+            new_media = Titles(
+                title = request.form.get('title'),
+                type = request.form.get('type'),
+                genre = request.form.get('genre'),
+                total_seasons = request.form.get('total_seasons'),
+                ongoing_ind = is_ongoing,
+                complete_collection = is_complete,
+                brand = request.form.get('brand'),
+                tmdb_id = request.form.get('tmdb_id')
+            )
+            db.session.add(new_media)
+            db.session.commit()
+
+            new_id = new_media.id
+
+        # Check if the "DVD Form" was submitted
+        elif 'submit_dvd' in request.form:
+            new_id = None
+            new_dvd = Dvds(
+                season_number = request.form.get('season_number'),
+                season_part = request.form.get('season_part'),
+                episodes = request.form.get('episodes'),
+                location = request.form.get('location'),
+                season_name = request.form.get('season_name'),
+                box_set = request.form.get('box_set'),
+                complete_season = request.form.get('complete_season'),
+                tmdb_id_dvd = request.form.get('tmdb_id_dvd'),
+                disk_type = request.form.get('disk_type'),
+                disk_region = request.form.get('disk_region'),
+                file_size = request.form.get('file_size'),
+                category = request.form.get('category'),
+                compressed = request.form.get('compressed'),
+                adjusted_file_size = request.form.get('adjusted_file_size'),
+                disk_type_uploaded = request.form.get('disk_type_uploaded')
+            )
+            db.session.add(new_dvd)
+            db.session.commit()
+
+            new_id = new_dvd.id
+
+        # Check if the "Purchase Form" was submitted
+        elif 'submit_purchase' in request.form:
+            new_id = None
+            new_purchase = Purchases(
+                purchase_date = request.form.get('purchase_date'),
+                cost = request.form.get('cost'),
+                store = request.form.get('store'),
+                condition = request.form.get('condition'),
+                notes = request.form.get('notes'),
+            )
+            db.session.add(new_purchase)
+            db.session.commit()
+
+            new_id = new_purchase.id
+
+    # Re-render the same page with the new ID available to show the next section
+    return render_template('add_media.html', movie_id=new_id)
+
 
 
 if __name__ == '__main__':
