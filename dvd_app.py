@@ -216,5 +216,11 @@ def qr():
     
     return render_template('qr_code.html', box_results=results, counts=count_results, param=params)
 
+@app.route('/add_media')
+def add_media():
+
+    return render_template('add_media.html')
+
+
 if __name__ == '__main__':
     app.run(debug=True)

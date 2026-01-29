@@ -52,23 +52,46 @@ button {
     cursor: pointer;
 }
 
-/* Stats Grid */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 40px;
-}
 
 .stat-card {
     background: var(--card-bg);
     padding: 20px;
     border-radius: 12px;
     border-left: 4px solid var(--accent-color);
+    
 }
 
 .stat-card h4 { margin-top: 0; color: var(--text-dim); text-transform: uppercase; font-size: 0.8rem; }
 .stat-value { font-size: 1.5rem; font-weight: bold; }
+
+
+/* Form Styling */
+.form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;         /* Adds even spacing between your questions */
+}
+
+.form-group {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center; /* Aligns labels and inputs to the left */
+}
+
+label {
+    font-weight: bold;
+    margin-bottom: 5px; /* Space between label and its input */
+}
+
+input, select, textarea {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    max-width: 250px;
+    width: 100%; /* Makes all inputs the same width */
+}
 
 /* Table Styling */
 table {
@@ -166,6 +189,7 @@ body {
     scroll-snap-align: center;
     background: var(--card-bg);
     padding: 20px;
+    max-width: 300px;
     border-radius: 15px;
     border-left: 4px solid var(--accent-color);
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);

@@ -3,159 +3,210 @@
 
 {% block content %}
 
-<!-- Make this sectionable instead of one long page -->
+<!-- Make this sectionable instead of one long page with next button that comes on after a submission is returned-->
 
- <h2 style="font-size: 1rem; color: var(--text-dim); margin-bottom: 10px;">More Insights (Swipe →)</h2>
-    <div class="stat-carousel">
+<h2>New Media Entry</h2>
 
-    <h2>New Media Entry</h2>
     <!-- <form action="/add_purchase" method="POST"> -->
-    <form>
+
+<div class="stat-carousel">
+        
+    <!-- Media Card -->
+    <div class="carousel-card">
+        <form>
         <!-- Table 1: Media Details -->
-        <fieldset class="stat-card">
-            <legend class="stat-card">Media Information</legend>
-            <div>
-                <label for="title">Title</label>
-                <input type="text" name="title" id="title" required>
-
-                <label for="type" >Movie or Show</label>
-                <select name="type" id="type" required>
-                    <option value="" disabled selected>Select format...</option>
-                    <option value="movie">Movie</option>
-                    <option value="tv_show">TV Show</option>
-                </select>
-
-                <label for="genre">Genre</label>
-                <input type="text" name="genre" id="genre" required>
+            <fieldset>
+                <legend>Media Information</legend>
                 
-                <label for="total_seasons" class="form-label">Total Seasons</label>
-                <input type="number" step="0" name="total_seasons" id="total_seasons" placeholder="1" required>
+                <div class="form-group">
+                    <label for="title">Title</label>
+                    <input type="text" name="title" id="title" required>
+                </div>
                 
-                <input class="form-check-input" type="checkbox" name="ongoing_ind" id="ongoing_ind" required>
-                <label class="form-check-label" for="ongoing_ind">
-                    Ongoing?
-                </label>
+                <div class="form-group">
+                    <label for="type" >Movie or Show</label>
+                    <select name="type" id="type" required>
+                        <option value="" disabled selected>Select format...</option>
+                        <option value="movie">Movie</option>
+                        <option value="tv_show">TV Show</option>
+                    </select>
+                </div>
 
-                <input class="form-check-input" type="checkbox" name="complete_collection" id="complete_collection" required>
-                <label class="form-check-label" for="complete_collection">
-                    Complete Collection?
-                </label>
+                <div class="form-group">
+                    <label for="genre">Genre</label>
+                    <input type="text" name="genre" id="genre" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="total_seasons" class="form-label">Total Seasons</label>
+                    <input type="number" step="0" name="total_seasons" id="total_seasons" placeholder="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Ongoing?</label>
+                    <input type="checkbox" name="ongoing_ind" id="ongoing_ind" required>
+                    
+                </div>
+
+                <div class="form-group">
+                    <label>Complete Collection?</label>
+                    <input type="checkbox" name="complete_collection" id="complete_collection" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="brand">Brand</label>
+                    <input type="text" name="brand" id="brand" >
+                </div>
+
+                <div class="form-group">
+                    <label for="tmdb_id">tmdb_id</label>
+                    <input type="text" name="tmdb_id" id="tmdb_id" >
+                </div>
+            </fieldset>
+            <button type="submit">Save Record to Media Table</button>
+            <button type="Next" style="display: none;">Next to New DVD Item</button>
+        </form>
+    </div>
+
+    <div class="carousel-card">
+        <form>
+            <!-- Table 2: DVD Item Details -->
+            <fieldset>
+                <legend>DVD Specifics</legend>
+                <div class="form-group">
+                    <label for="season_number" class="form-label">Season Number</label>
+                    <input type="number" step="0" name="season_number" id="season_number" placeholder="1">
+                </div>
+
+                <div class="form-group">
+                    <label for="season_part" class="form-label">Season Part</label>
+                    <input type="number" step="0" name="season_part" id="season_part">
+                </div>
+
+                <div class="form-group">
+                    <label for="episodes" class="form-label">Episodes</label>
+                    <input type="number" step="0" name="episodes" id="episodes" placeholder="1">
+                </div>
                 
-                <label for="brand">Brand</label>
-                <input type="text" name="brand" id="brand" >
-
-                <label for="tmdb_id">tmdb_id</label>
-                <input type="text" name="tmdb_id" id="tmdb_id" >
+                <div class="form-group">
+                    <label for="location">Location</label>
+                    <input type="text" name="location" id="location" >
+                </div>
                 
-            </div>
-        </fieldset>
+                <div class="form-group">
+                    <label for="season_name">Season Name</label>
+                    <input type="text" name="season_name" id="season_name" >
+                </div>
 
-        <!-- Table 2: DVD Item Details -->
-        <fieldset class="stat-card">
-            <legend class="stat-card">DVD Specifics</legend>
-            <div >
-                <label for="season_number" class="form-label">Season Number</label>
-                <input type="number" step="0" name="season_number" id="season_number" placeholder="1">
+                <div class="form-group">
+                    <label>Box Set?</label>
+                    <input type="checkbox" name="box_set" id="box_set" required>
+                </div>
                 
-                <label for="season_part" class="form-label">Season Part</label>
-                <input type="number" step="0" name="season_part" id="season_part">
+                <div class="form-group">
+                    <label>Complete Season?</label>
+                    <input type="checkbox" name="complete_season" id="complete_season" required>
+                </div>
 
-                <label for="episodes" class="form-label">Episodes</label>
-                <input type="number" step="0" name="episodes" id="episodes" placeholder="1">
+                <div class="form-group">
+                    <label for="tmdb_id_dvd">tmdb_id</label>
+                    <input type="text" name="tmdb_id_dvd" id="tmdb_id_dvd" >
+                </div>
+
+                <div class="form-group">
+                    <label for="disk_type" >Disk Type</label>
+                    <select name="disk_type" id="disk_type" required>
+                        <option value="" disabled selected>Select format...</option>
+                        <option value="dvd">dvd</option>
+                        <option value="BR">BR</option>
+                        <option value="BR/dvd">BR/dvd</option>
+                        <option value="4K">4K</option>
+                        <option value="4K/BR">4K/BR</option>
+                        <option value="4K/BR/Digital">4K/BR/Digital</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="disk_region" >Disk Region</label>
+                    <select name="disk_region" id="disk_region" required>
+                        <option value="" disabled selected>Select format...</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="file_size">File Size</label>
+                    <input type="number" step="0.01" name="file_size" id="file_size">
+                </div>
+
+                <div class="form-group">
+                    <label for="category">tmdb_id</label>
+                    <input type="text" name="category" id="category" >
+                </div>
+
+                <div class="form-group">
+                    <label>compressed?</label>
+                    <input type="checkbox" name="compressed" id="compressed" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="adjusted_file_size">Adjusted File Size</label>
+                    <input type="number" step="0.01" name="adjusted_file_size" id="adjusted_file_size">
+                </div>
+
+                <div class="form-group">
+                    <label for="disk_type_uploaded">Adjusted File Size</label>
+                    <input type="text" name="disk_type_uploaded" id="disk_type_uploaded">
+                </div>
                 
-                <label for="location">Location</label>
-                <input type="text" name="location" id="location" >
+            </fieldset>
+            <button type="submit">Save Record to DVD Table</button>
+            <button type="Next" style="display: none;">Next to Purchase Info</button>
+        </form>
+    </div>
 
-                <label for="season_name">Season Name</label>
-                <input type="text" name="season_name" id="season_name" >
+    <div class="carousel-card">
+        <form>
+            <!-- Table 3: Purchase Details -->
+            <fieldset>
+                <legend>Purchase History</legend>
 
-                <input class="form-check-input" type="checkbox" name="box_set" id="box_set" required>
-                <label class="form-check-label" for="box_set">
-                    Box Set?
-                </label>
+                <div class="form-group">
+                    <label for="purchase_date" class="form-label">Purchase Date</label>
+                    <input type="date" name="purchase_date" id="purchase_date" class="form-control" required>
+                </div>
 
-                <input class="form-check-input" type="checkbox" name="complete_season" id="complete_season" required>
-                <label class="form-check-label" for="complete_season">
-                    Complete Season?
-                </label>
-
-                <label for="tmdb_id_dvd">tmdb_id</label>
-                <input type="text" name="tmdb_id_dvd" id="tmdb_id_dvd" >
-
-                <label for="disk_type" >Disk Type</label>
-                <select name="disk_type" id="disk_type" required>
-                    <option value="" disabled selected>Select format...</option>
-                    <option value="dvd">dvd</option>
-                    <option value="BR">BR</option>
-                    <option value="BR/dvd">BR/dvd</option>
-                    <option value="4K">4K</option>
-                    <option value="4K/BR">4K/BR</option>
-                    <option value="4K/BR/Digital">4K/BR/Digital</option>
-                </select>
-
-                <label for="disk_region" >Disk Region</label>
-                <select name="disk_region" id="disk_region" required>
-                    <option value="" disabled selected>Select format...</option>
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                </select>
-
-                <label for="file_size">File Size</label>
-                <input type="number" step="0.01" name="file_size" id="file_size">
+                <div class="form-group">
+                    <label for="cost" class="form-label">Price Paid</label>
+                    <input type="number" step="0.01" name="cost" id="cost" class="form-control" required>
+                </div>
                 
-                <label for="category">tmdb_id</label>
-                <input type="text" name="category" id="category" >
+                <div class="form-group">
+                    <label for="store">Store</label>
+                    <input type="text" name="store" id="store">
+                </div>
 
-                <input class="form-check-input" type="checkbox" name="compressed" id="compressed" required>
-                <label class="form-check-label" for="compressed">
-                    compressed?
-                </label>
+                <div class="form-group">
+                    <label for="condition" class="form-label">Condition</label>
+                        <select name="condition" id="condition" class="form-select">
+                            <option value="New">New</option>
+                            <option value="Used">Used</option>
+                        </select>
+                </div>
 
-                <label for="adjusted_file_size">Adjusted File Size</label>
-                <input type="number" step="0.01" name="adjusted_file_size" id="adjusted_file_size">
-                
-                <label for="disk_type_uploaded">Adjusted File Size</label>
-                <input type="text" name="disk_type_uploaded" id="disk_type_uploaded">
-                
-            
-            </div>
-        </fieldset>
-
-        <!-- Table 3: Purchase Details -->
-        <fieldset class="stat-card">
-            <legend class="w-auto px-2">Purchase History</legend>
-
-            <div class="mb-3">
-                <label for="purchase_date" class="form-label">Purchase Date</label>
-                <input type="date" name="purchase_date" id="purchase_date" class="form-control" required>
-            </div>
-
-            <div class="mb-3">
-                <label for="cost" class="form-label">Price Paid</label>
-                <input type="number" step="0.01" name="cost" id="cost" class="form-control" required>
-            </div>
-            
-            <label for="store">Store</label>
-                <input type="text" name="store" id="store">
-                
-
-            <label for="condition" class="form-label">Condition</label>
-                <select name="condition" id="condition" class="form-select">
-                    <option value="New">New</option>
-                    <option value="Used">Used</option>
-                </select>
-
-            <label for="notes">Store</label>
-                <input type="text" name="notes" id="notes">
-
-        </fieldset> 
-
-        <button type="submit">Save Entire Record</button>
-    </form>
-
+                <div class="form-group">
+                    <label for="notes">Store</label>
+                    <input type="text" name="notes" id="notes">
+                </div>
+            </fieldset>
+            <button type="submit">Save Record to Purchase Table</button>
+        </form>
+    </div>
+</div>
 
 
 {% endblock %}
