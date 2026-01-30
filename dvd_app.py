@@ -1,9 +1,10 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from dotenv import load_dotenv, find_dotenv
 import os 
 from pathlib import Path
+from utilities import clean_int
 
 """
 Overall updates to make:
@@ -33,6 +34,7 @@ host = os.getenv('DB_HOST')
 dbname = os.getenv('DB_NAME')
 schema = os.getenv('DB_SCHEMA')
 
+
 app.config['SQLALCHEMY_DATABASE_URI']=f'postgresql://{user}:{password}@{host}/{dbname}'
 
 db=SQLAlchemy(app)
@@ -42,6 +44,7 @@ with app.app_context():
     # print(f"DEBUG: {db.metadata.tables.keys()}")
 
 # Access a specific reflected table
+## This section below tells the different tables in the database as individual classes.
 class Titles(db.Model):
     __table__ = db.metadata.tables[f'{schema}.media_titles']
 
@@ -215,6 +218,101 @@ def qr():
     count_results = db.session.execute(text(count_sql),params).mappings().all()
     
     return render_template('qr_code.html', box_results=results, counts=count_results, param=params)
+
+@app.route('/add_media', methods=['GET', 'POST'])
+def add_media():
+    # print(f"DEBUG: DVD Columns: {Dvds.__table__.columns.keys()}")
+    #initialize variables 
+    # Retrieve ID from URL if redirected
+    new_id = request.args.get('new_id') 
+    dvd_id = request.args.get('dvd_id')
+    purchase_id = request.args.get('purchase_id')
+
+    if request.method == 'POST':
+        
+        # Check if the "Media Form" was submitted
+        if 'submit_media' in request.form:
+            new_id = None
+
+            is_ongoing = request.form.get('ongoing_ind')=='on'
+            is_complete = request.form.get('complete_collection')=='on'
+
+            new_media = Titles(
+                title = request.form.get('title'),
+                type = request.form.get('type'),
+                genre = request.form.get('genre'),
+                total_seasons = request.form.get('total_seasons'),
+                ongoing_ind = is_ongoing,
+                complete_collection = is_complete,
+                brand = request.form.get('brand'),
+                tmdb_id = request.form.get('tmdb_id')
+            )
+            db.session.add(new_media)
+            db.session.commit()
+
+            new_id = new_media.id
+
+            return redirect(url_for('add_media', new_id=new_media.id))
+
+        # Check if the "DVD Form" was submitted
+        elif 'submit_dvd' in request.form:
+            dvd_id = None
+
+            #Added this to handle if checkbox is on. if so then TRUE will be passed
+            is_box_set = request.form.get('box_set')=='on'
+            is_complete_season = request.form.get('complete_season')=='on'
+            is_compressed = request.form.get('compressed')=='on'
+
+            new_dvd = Dvds(
+                media_title_id = request.form.get('media_title_id'),
+                season_number = clean_int(request.form.get('season_number')),
+                season_part = clean_int(request.form.get('season_part')),
+                episodes = clean_int(request.form.get('episodes')),
+                location_label = request.form.get('location_label'),
+                season_name = request.form.get('season_name'),
+                box_set = is_box_set,
+                complete_season = is_complete_season,
+                tmdb_id = request.form.get('tmdb_id'),
+                disk_type = request.form.get('disk_type'),
+                disk_region = clean_int(request.form.get('disk_region')),
+                file_size = clean_int(request.form.get('file_size')),
+                category = request.form.get('category'),
+                compressed = is_compressed,
+                adjusted_file_size = clean_int(request.form.get('adjusted_file_size')),
+                disk_type_uploaded = request.form.get('disk_type_uploaded')
+            )
+            db.session.add(new_dvd)
+            db.session.commit()
+
+            dvd_id = new_dvd.id
+
+            return redirect(url_for('add_media', dvd_id=new_dvd.id))
+
+        # Check if the "Purchase Form" was submitted
+        elif 'submit_purchase' in request.form:
+            purchase_id = None
+
+            new_purchase = Purchases(
+                dvd_item_id = request.form.get('dvd_item_id'),
+                purchase_date = request.form.get('purchase_date'),
+                cost = clean_int(request.form.get('cost')),
+                store = request.form.get('store'),
+                condition = request.form.get('condition'),
+                notes = request.form.get('notes'),
+            )
+            db.session.add(new_purchase)
+            db.session.commit()
+
+            purchase_id=new_purchase.id
+
+            return redirect(url_for('add_media', purchase_id=new_purchase.id))
+
+    # Re-render the same page with the new ID available to show the next section
+    return render_template('add_media.html', movie_id=new_id, dvd_id=dvd_id, purchase_id=purchase_id)
+
+
+###### NEeed to handle if the form is blank how will I insert blanks 
+
 
 if __name__ == '__main__':
     app.run(debug=True)
