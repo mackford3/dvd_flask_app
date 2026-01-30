@@ -82,6 +82,11 @@
             <fieldset>
                 <legend>DVD Specifics</legend>
                 <div class="form-group">
+                    <label for="media_title_id" class="form-label">Media Title ID</label>
+                    <input type="number" step="0" name="media_title_id" id="media_title_id" required>
+                </div>
+
+                <div class="form-group">
                     <label for="season_number" class="form-label">Season Number</label>
                     <input type="number" step="0" name="season_number" id="season_number" placeholder="1">
                 </div>
@@ -97,8 +102,8 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="location">Location</label>
-                    <input type="text" name="location" id="location" >
+                    <label for="location_label">Location</label>
+                    <input type="text" name="location_label" id="location_label" >
                 </div>
                 
                 <div class="form-group">
@@ -108,22 +113,22 @@
 
                 <div class="form-group">
                     <label>Box Set?</label>
-                    <input type="checkbox" name="box_set" id="box_set" required>
+                    <input type="checkbox" name="box_set" id="box_set">
                 </div>
                 
                 <div class="form-group">
                     <label>Complete Season?</label>
-                    <input type="checkbox" name="complete_season" id="complete_season" required>
+                    <input type="checkbox" name="complete_season" id="complete_season">
                 </div>
 
                 <div class="form-group">
-                    <label for="tmdb_id_dvd">tmdb_id</label>
-                    <input type="text" name="tmdb_id_dvd" id="tmdb_id_dvd" >
+                    <label for="tmdb_id">tmdb_id</label>
+                    <input type="text" name="tmdb_id" id="tmdb_id" >
                 </div>
 
                 <div class="form-group">
                     <label for="disk_type" >Disk Type</label>
-                    <select name="disk_type" id="disk_type" required>
+                    <select name="disk_type" id="disk_type">
                         <option value="" disabled selected>Select format...</option>
                         <option value="dvd">dvd</option>
                         <option value="BR">BR</option>
@@ -136,8 +141,8 @@
 
                 <div class="form-group">
                     <label for="disk_region" >Disk Region</label>
-                    <select name="disk_region" id="disk_region" required>
-                        <option value="" disabled selected>Select format...</option>
+                    <select name="disk_region" id="disk_region" >
+                        <option value="" disabled selected>Select region...</option>
                         <option value="1">1</option>
                         <option value="2">2</option>
                         <option value="3">3</option>
@@ -152,13 +157,13 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="category">tmdb_id</label>
+                    <label for="category">Category</label>
                     <input type="text" name="category" id="category" >
                 </div>
 
                 <div class="form-group">
                     <label>compressed?</label>
-                    <input type="checkbox" name="compressed" id="compressed" required>
+                    <input type="checkbox" name="compressed" id="compressed">
                 </div>
 
                 <div class="form-group">
@@ -167,7 +172,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="disk_type_uploaded">Adjusted File Size</label>
+                    <label for="disk_type_uploaded">Disk Type Uploaded</label>
                     <input type="text" name="disk_type_uploaded" id="disk_type_uploaded">
                 </div>
                 
@@ -175,7 +180,7 @@
             <button type="submit" name="submit_dvd">Save Record to DVD Table</button>
             <button type="Next" style="display: none;">Next to Purchase Info</button>
         </form>
-        {% if movie_id %}
+        {% if dvd_id %}
         <div style="background-color: #d4edda; padding: 15px; border-radius: 5px; margin: 20px 0;">
             <p>Success! Your entry has been created.</p>
             <h2>The generated ID is: {{ dvd_id }}</h2>
@@ -188,6 +193,11 @@
             <!-- Table 3: Purchase Details -->
             <fieldset>
                 <legend>Purchase History</legend>
+
+                <div class="form-group">
+                    <label for="dvd_item_id" class="form-label">Dvd Item ID</label>
+                    <input type="number" step="0" name="dvd_item_id" id="dvd_item_id" required>
+                </div>
 
                 <div class="form-group">
                     <label for="purchase_date" class="form-label">Purchase Date</label>

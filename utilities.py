@@ -40,7 +40,17 @@ def get_movie_poster_url(api_key, movie_title):
     except requests.exceptions.RequestException as e:
         return f"An error occurred: {e}"
 
-# Example usage
-poster_url = get_movie_poster_url(API_KEY, MOVIE_TITLE)
-print(f"Poster URL for '{MOVIE_TITLE}': {poster_url}")
+# # Example usage
+# poster_url = get_movie_poster_url(API_KEY, MOVIE_TITLE)
+# print(f"Poster URL for '{MOVIE_TITLE}': {poster_url}")
+
+#This is being added because the HTML form returns an empty string if the form is left blank. SQLALCHEMY doesnt convert it '' to none 
+def clean_int(value):
+    # Returns an integer if possible, else None
+    if value is None or str(value).strip() == '':
+        return None
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return None
 
