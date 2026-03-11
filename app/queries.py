@@ -49,10 +49,12 @@ def recent_dvds_query() -> str:
     )
 
 
-def stats_query(select: str, group_by: str = None) -> str:
+def stats_query(select: str, group_by: str = None, order_by: str=None) -> str:
     sql = f"SELECT {select} FROM ({base_query()}) AS sub WHERE 1=1"
     if group_by:
         sql += f" GROUP BY {group_by}"
+    if order_by:
+        sql += f" ORDER BY {order_by}"
     return sql
 
 

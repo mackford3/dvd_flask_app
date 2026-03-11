@@ -21,7 +21,7 @@ def home():
     dvds        = _fetch(recent_dvds_query())
     counts      = _fetch(stats_query('COUNT(*) AS count'))
     types       = _fetch(stats_query('type, COUNT(type) AS count', group_by='type'))
-    genres      = _fetch(stats_query('genre, COUNT(genre) AS count', group_by='genre'))
+    genres      = _fetch(stats_query('genre, COUNT(genre) AS count', group_by='genre', order_by='genre, count'))
     costs       = _fetch(stats_query('type, SUM(cost) AS sum', group_by='type'))
     cost_disks  = _fetch(stats_query('disk_type, SUM(cost) AS sum', group_by='disk_type'))
     cost_stores = _fetch(cost_by_store_query())
