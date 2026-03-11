@@ -24,17 +24,27 @@
     </div>
 </div>
 
-<!-- Step 1: Media Info -->
+<!-- ── Step 1: Media Info ─────────────────────────────────── -->
 {% if not movie_id %}
 <div class="wizard-step">
-    <form method="post">
+    <form method="post" id="mediaForm">
         <fieldset>
             <legend>Media Information</legend>
 
+            <!-- Title + TMDB Search -->
             <div class="form-group">
                 <label for="title">Title</label>
-                <input type="text" name="title" id="title" required>
+                <div class="input-action-row">
+                    <input type="text" name="title" id="title" required autocomplete="off">
+                    <button type="button" class="btn-secondary" id="tmdbSearchBtn">
+                        Search TMDB
+                    </button>
+                </div>
+                <span class="field-hint" id="titleHint"></span>
             </div>
+
+            <!-- TMDB Search Results (hidden until triggered) -->
+            <div id="tmdbResults" class="tmdb-results" style="display:none"></div>
 
             <div class="form-group">
                 <label for="type">Movie or Show</label>
@@ -45,9 +55,12 @@
                 </select>
             </div>
 
+            <!-- Genre: datalist for existing + free text -->
             <div class="form-group">
                 <label for="genre">Genre</label>
-                <input type="text" name="genre" id="genre" required>
+                <input type="text" name="genre" id="genre" list="genreList" required
+                       placeholder="Type or select...">
+                <datalist id="genreList"></datalist>
             </div>
 
             <div class="form-group">
@@ -80,6 +93,20 @@
     </form>
 </div>
 
+<!-- ── Duplicate Check Modal ──────────────────────────────── -->
+<div id="dupModal" class="modal-backdrop" style="display:none">
+    <div class="modal">
+        <h2>Possible Duplicate Found</h2>
+        <p class="modal-subtitle">We found existing titles that match. Is this the same item?</p>
+        <div id="dupList" class="dup-list"></div>
+        <div class="modal-actions">
+            <button type="button" class="btn-secondary" id="dupDismiss">
+                No — Create New Title
+            </button>
+        </div>
+    </div>
+</div>
+
 {% elif movie_id and not dvd_id %}
 <!-- Step 1 Success -->
 <div class="wizard-step">
@@ -87,13 +114,13 @@
         <p>✓ Media record saved successfully.</p>
         <p>Generated ID: <strong>{{ movie_id }}</strong></p>
     </div>
-    <a href="{{ url_for('media.add_media', new_id=movie_id, dvd_id='') }}" class="wizard-next-btn">
+    <a href="{{ url_for('media.add_media', new_id=movie_id) }}" class="wizard-next-btn">
         Next: DVD Specifics →
     </a>
 </div>
 {% endif %}
 
-<!-- Step 2: DVD Specifics -->
+<!-- ── Step 2: DVD Specifics ──────────────────────────────── -->
 {% if movie_id and not dvd_id %}
 <div class="wizard-step" style="margin-top: 20px;">
     <form method="post">
@@ -212,7 +239,7 @@
 </div>
 {% endif %}
 
-<!-- Step 3: Purchase Info -->
+<!-- ── Step 3: Purchase Info ──────────────────────────────── -->
 {% if dvd_id and not purchase_id %}
 <div class="wizard-step" style="margin-top: 20px;">
     <form method="post">
@@ -259,14 +286,13 @@
 </div>
 
 {% elif purchase_id %}
-<!-- All done -->
 <div class="wizard-step">
     <div class="success-banner">
         <p>✓ Purchase record saved successfully.</p>
         <p>Generated ID: <strong>{{ purchase_id }}</strong></p>
     </div>
     <div class="wizard-done">
-        <p>All three records saved! What would you like to do next?</p>
+        <p>All three records saved!</p>
         <div class="wizard-done-actions">
             <a href="{{ url_for('media.add_media') }}" class="wizard-next-btn">Add Another</a>
             <a href="{{ url_for('home.home') }}" class="wizard-next-btn wizard-next-btn--secondary">Back to Home</a>
@@ -275,13 +301,12 @@
 </div>
 {% endif %}
 
+<!-- ── Styles ─────────────────────────────────────────────── -->
 <style>
-    /* ── Wizard Tabs ─────────────────────────────────────────── */
     .wizard-tabs {
         display: flex;
         align-items: center;
         margin-bottom: 32px;
-        gap: 0;
     }
     .wizard-tab {
         display: flex;
@@ -296,66 +321,168 @@
         flex: 1;
         justify-content: center;
     }
-    .wizard-tab.active {
-        opacity: 1;
-        border-color: var(--gold);
-        background: var(--gold-dim);
-    }
-    .wizard-tab.complete {
-        opacity: 1;
-        border-color: rgba(92,224,138,0.3);
-        background: rgba(92,224,138,0.06);
-    }
-    .wizard-tab.locked {
-        opacity: 0.25;
-        cursor: not-allowed;
-    }
+    .wizard-tab.active  { opacity: 1; border-color: var(--gold); background: var(--gold-dim); }
+    .wizard-tab.complete { opacity: 1; border-color: rgba(92,224,138,0.3); background: rgba(92,224,138,0.06); }
+    .wizard-tab.locked  { opacity: 0.25; cursor: not-allowed; }
     .wizard-tab-num {
-        width: 26px;
-        height: 26px;
+        width: 26px; height: 26px;
         border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.78rem;
-        font-weight: 700;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.78rem; font-weight: 700;
         background: var(--bg-raised);
         border: 1px solid var(--border-mid);
         flex-shrink: 0;
     }
-    .wizard-tab.active .wizard-tab-num {
-        background: var(--gold);
-        color: #0a0a0c;
-        border-color: var(--gold);
-    }
-    .wizard-tab.complete .wizard-tab-num {
-        background: var(--green);
-        color: #0a0a0c;
-        border-color: var(--green);
-    }
-    .wizard-tab-label {
-        font-size: 0.82rem;
-        font-weight: 500;
-        letter-spacing: 0.02em;
-    }
-    .wizard-divider {
-        height: 1px;
-        width: 24px;
-        background: var(--border);
-        flex-shrink: 0;
-    }
+    .wizard-tab.active .wizard-tab-num  { background: var(--gold); color: #0a0a0c; border-color: var(--gold); }
+    .wizard-tab.complete .wizard-tab-num { background: var(--green); color: #0a0a0c; border-color: var(--green); }
+    .wizard-tab-label { font-size: 0.82rem; font-weight: 500; }
+    .wizard-divider { height: 1px; width: 24px; background: var(--border); flex-shrink: 0; }
 
-    /* ── Wizard Step ─────────────────────────────────────────── */
-    .wizard-step {
-        max-width: 560px;
-        animation: fadeUp 250ms ease both;
-    }
+    .wizard-step { max-width: 560px; animation: fadeUp 250ms ease both; }
     @keyframes fadeUp {
         from { opacity: 0; transform: translateY(12px); }
         to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* ── Next Button ─────────────────────────────────────────── */
+    /* Input + button on same row */
+    .input-action-row {
+        display: flex;
+        gap: 8px;
+        align-items: stretch;
+    }
+    .input-action-row input {
+        flex: 1;
+    }
+    .btn-secondary {
+        background: transparent;
+        border: 1px solid var(--border-mid);
+        border-radius: var(--radius-sm);
+        color: var(--text-mid);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.82rem;
+        font-weight: 600;
+        padding: 9px 14px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all var(--transition);
+        flex-shrink: 0;
+    }
+    .btn-secondary:hover { border-color: var(--gold); color: var(--gold); }
+    .btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .field-hint {
+        font-size: 0.75rem;
+        color: var(--text-dim);
+        margin-top: 2px;
+    }
+
+    /* TMDB search results dropdown */
+    .tmdb-results {
+        background: var(--bg-card);
+        border: 1px solid var(--border-mid);
+        border-radius: var(--radius);
+        overflow: hidden;
+        margin-top: -8px;
+        margin-bottom: 14px;
+    }
+    .tmdb-result-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+        cursor: pointer;
+        border-bottom: 1px solid var(--border);
+        transition: background var(--transition);
+    }
+    .tmdb-result-item:last-child { border-bottom: none; }
+    .tmdb-result-item:hover { background: var(--bg-raised); }
+    .tmdb-result-poster {
+        width: 36px; height: 54px;
+        border-radius: 4px;
+        object-fit: cover;
+        background: var(--bg-raised);
+        flex-shrink: 0;
+    }
+    .tmdb-result-info { flex: 1; min-width: 0; }
+    .tmdb-result-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .tmdb-result-meta {
+        font-size: 0.75rem;
+        color: var(--text-dim);
+        margin-top: 2px;
+    }
+    .tmdb-result-select {
+        font-size: 0.72rem;
+        color: var(--gold);
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+
+    /* Duplicate modal */
+    .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.7);
+        backdrop-filter: blur(4px);
+        z-index: 200;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        animation: fadeIn 150ms ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal {
+        background: var(--bg-card);
+        border: 1px solid var(--border-mid);
+        border-radius: var(--radius-lg);
+        padding: 28px;
+        max-width: 500px;
+        width: 100%;
+        animation: slideUp 200ms ease;
+    }
+    @keyframes slideUp {
+        from { transform: translateY(20px); opacity: 0; }
+        to   { transform: translateY(0);    opacity: 1; }
+    }
+    .modal h2 { font-size: 1.2rem; margin-bottom: 6px; }
+    .modal-subtitle { font-size: 0.85rem; color: var(--text-dim); margin-bottom: 20px; }
+
+    .dup-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+    .dup-card {
+        background: var(--bg-raised);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 14px 16px;
+    }
+    .dup-card-title { font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .dup-card-meta  { font-size: 0.8rem; color: var(--text-dim); display: flex; flex-wrap: wrap; gap: 12px; }
+    .dup-card-meta span { display: flex; gap: 4px; }
+    .dup-card-meta strong { color: var(--text-mid); }
+    .dup-card-actions { margin-top: 12px; display: flex; gap: 8px; }
+    .btn-use-existing {
+        background: var(--gold);
+        color: #0a0a0c;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 700;
+        padding: 8px 14px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all var(--transition);
+    }
+    .btn-use-existing:hover { background: var(--gold-light); }
+
+    .modal-actions { border-top: 1px solid var(--border); padding-top: 16px; }
+
     .wizard-next-btn {
         display: inline-block;
         margin-top: 16px;
@@ -372,42 +499,203 @@
         text-decoration: none;
         transition: all var(--transition);
     }
-    .wizard-next-btn:hover {
-        background: var(--gold-light);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 20px rgba(201,168,76,0.25);
-    }
+    .wizard-next-btn:hover { background: var(--gold-light); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(201,168,76,0.25); }
     .wizard-next-btn--secondary {
         background: transparent;
         border: 1px solid var(--border-mid);
         color: var(--text-mid);
         margin-left: 10px;
     }
-    .wizard-next-btn--secondary:hover {
-        background: var(--bg-raised);
-        box-shadow: none;
-        color: var(--text);
-    }
+    .wizard-next-btn--secondary:hover { background: var(--bg-raised); box-shadow: none; color: var(--text); }
+    .wizard-done { margin-top: 20px; }
+    .wizard-done p { margin-bottom: 14px; }
+    .wizard-done-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
-    /* ── Done State ──────────────────────────────────────────── */
-    .wizard-done {
-        margin-top: 20px;
-    }
-    .wizard-done p {
-        margin-bottom: 14px;
-    }
-    .wizard-done-actions {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-    /* Mobile */
     @media (max-width: 500px) {
         .wizard-tab-label { display: none; }
         .wizard-tab { flex: 0 0 auto; padding: 10px 12px; }
         .wizard-divider { flex: 1; }
+        .input-action-row { flex-wrap: wrap; }
     }
 </style>
+
+<!-- ── JavaScript ─────────────────────────────────────────── -->
+<script>
+(function () {
+    const TMDB_KEY = "{{ tmdb_api_key if tmdb_api_key else '' }}";
+    const BASE_IMG = "https://image.tmdb.org/t/p/w92";
+
+    // ── Load existing genres into datalist ──────────────────
+    async function loadGenres() {
+        try {
+            const res  = await fetch('/api/genres');
+            const list = await res.json();
+            const dl   = document.getElementById('genreList');
+            if (!dl) return;
+            dl.innerHTML = list.map(g => `<option value="${g}">`).join('');
+        } catch (e) { console.warn('Genre load failed', e); }
+    }
+
+    // ── Duplicate check on title blur ───────────────────────
+    const titleInput = document.getElementById('title');
+    if (titleInput) {
+        titleInput.addEventListener('blur', async () => {
+            const name = titleInput.value.trim();
+            if (!name) return;
+            try {
+                const res     = await fetch(`/api/check_title?name=${encodeURIComponent(name)}`);
+                const matches = await res.json();
+                if (matches.length > 0) showDupModal(matches);
+            } catch (e) { console.warn('Duplicate check failed', e); }
+        });
+    }
+
+    function showDupModal(matches) {
+        const modal   = document.getElementById('dupModal');
+        const dupList = document.getElementById('dupList');
+        dupList.innerHTML = matches.map(m => `
+            <div class="dup-card">
+                <div class="dup-card-title">${m.title}</div>
+                <div class="dup-card-meta">
+                    <span><strong>Type:</strong> ${m.type || '—'}</span>
+                    <span><strong>Genre:</strong> ${m.genre || '—'}</span>
+                    <span><strong>TMDB ID:</strong> ${m.tmdb_id || '—'}</span>
+                    <span><strong>Disks owned:</strong> ${m.disk_count}</span>
+                </div>
+                <div class="dup-card-actions">
+                    <a class="btn-use-existing"
+                       href="/add_media?new_id=${m.id}">
+                       Yes — Use This Title (ID ${m.id})
+                    </a>
+                </div>
+            </div>
+        `).join('');
+        modal.style.display = 'flex';
+    }
+
+    // Dismiss modal
+    const dismiss = document.getElementById('dupDismiss');
+    if (dismiss) {
+        dismiss.addEventListener('click', () => {
+            document.getElementById('dupModal').style.display = 'none';
+        });
+    }
+    // Close on backdrop click
+    const backdrop = document.getElementById('dupModal');
+    if (backdrop) {
+        backdrop.addEventListener('click', e => {
+            if (e.target === backdrop) backdrop.style.display = 'none';
+        });
+    }
+
+    // ── TMDB Search ─────────────────────────────────────────
+    const tmdbBtn     = document.getElementById('tmdbSearchBtn');
+    const tmdbResults = document.getElementById('tmdbResults');
+
+    if (tmdbBtn) {
+        tmdbBtn.addEventListener('click', async () => {
+            const query = document.getElementById('title').value.trim();
+            if (!query) {
+                document.getElementById('titleHint').textContent = 'Enter a title first.';
+                return;
+            }
+            tmdbBtn.disabled    = true;
+            tmdbBtn.textContent = 'Searching…';
+            document.getElementById('titleHint').textContent = '';
+
+            try {
+                const res  = await fetch(
+                    `https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&query=${encodeURIComponent(query)}`
+                );
+                const data = await res.json();
+                const hits = (data.results || [])
+                    .filter(r => r.media_type === 'movie' || r.media_type === 'tv')
+                    .slice(0, 5);
+
+                if (hits.length === 0) {
+                    tmdbResults.style.display = 'none';
+                    document.getElementById('titleHint').textContent = 'No TMDB results found.';
+                } else {
+                    renderTmdbResults(hits);
+                }
+            } catch (e) {
+                document.getElementById('titleHint').textContent = 'TMDB search failed.';
+            } finally {
+                tmdbBtn.disabled    = false;
+                tmdbBtn.textContent = 'Search TMDB';
+            }
+        });
+    }
+
+    function renderTmdbResults(hits) {
+        tmdbResults.style.display = 'block';
+        tmdbResults.innerHTML = hits.map(h => {
+            const title    = h.title || h.name || '';
+            const year     = (h.release_date || h.first_air_date || '').slice(0, 4);
+            const type     = h.media_type === 'movie' ? 'movie' : 'tv_show';
+            const typeLabel= h.media_type === 'movie' ? 'Movie' : 'TV Show';
+            const poster   = h.poster_path ? `${BASE_IMG}${h.poster_path}` : '';
+            const genre    = ''; // populated on select via genre lookup
+            return `
+                <div class="tmdb-result-item"
+                     data-id="${h.id}"
+                     data-title="${title.replace(/"/g, '&quot;')}"
+                     data-type="${type}"
+                     data-meditype="${h.media_type}"
+                     data-genres='${JSON.stringify(h.genre_ids || [])}'>
+                    ${poster
+                        ? `<img class="tmdb-result-poster" src="${poster}" alt="${title}">`
+                        : `<div class="tmdb-result-poster"></div>`}
+                    <div class="tmdb-result-info">
+                        <div class="tmdb-result-title">${title}</div>
+                        <div class="tmdb-result-meta">${typeLabel}${year ? ' · ' + year : ''}</div>
+                    </div>
+                    <span class="tmdb-result-select">Select ↗</span>
+                </div>`;
+        }).join('');
+
+        // Attach click handlers
+        tmdbResults.querySelectorAll('.tmdb-result-item').forEach(item => {
+            item.addEventListener('click', () => selectTmdbResult(item));
+        });
+    }
+
+    async function selectTmdbResult(item) {
+        const tmdbId   = item.dataset.id;
+        const title    = item.dataset.title;
+        const type     = item.dataset.type;
+        const mediaType= item.dataset.meditype;
+        const genreIds = JSON.parse(item.dataset.genres || '[]');
+
+        // Fill basic fields
+        document.getElementById('title').value   = title;
+        document.getElementById('tmdb_id').value = tmdbId;
+        const typeSelect = document.getElementById('type');
+        typeSelect.value = type;
+
+        // Hide results
+        tmdbResults.style.display = 'none';
+
+        // Fetch genre name from TMDB genre list
+        try {
+            const endpoint = mediaType === 'movie'
+                ? `https://api.themoviedb.org/3/genre/movie/list?api_key=${TMDB_KEY}`
+                : `https://api.themoviedb.org/3/genre/tv/list?api_key=${TMDB_KEY}`;
+            const res    = await fetch(endpoint);
+            const data   = await res.json();
+            const genres = data.genres || [];
+            const match  = genres.find(g => g.id === genreIds[0]);
+            if (match) {
+                document.getElementById('genre').value = match.name;
+            }
+        } catch (e) { console.warn('Genre lookup failed', e); }
+
+        document.getElementById('titleHint').textContent = `✓ Filled from TMDB (ID ${tmdbId})`;
+    }
+
+    // ── Init ────────────────────────────────────────────────
+    loadGenres();
+})();
+</script>
 
 {% endblock %}
