@@ -2,236 +2,412 @@
 
 {% block content %}
 
-<h2>New Media Entry</h2>
+<header>
+    <h1>New Media Entry</h1>
+</header>
 
-<div class="stat-carousel">
-
-    <!-- Card 1: Media Information -->
-    <div class="carousel-card">
-        <form method="post">
-            <fieldset>
-                <legend>Media Information</legend>
-
-                <div class="form-group">
-                    <label for="title">Title</label>
-                    <input type="text" name="title" id="title" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="type">Movie or Show</label>
-                    <select name="type" id="type" required>
-                        <option value="" disabled selected>Select format...</option>
-                        <option value="movie">Movie</option>
-                        <option value="tv_show">TV Show</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="genre">Genre</label>
-                    <input type="text" name="genre" id="genre" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="total_seasons">Total Seasons</label>
-                    <input type="number" step="1" name="total_seasons" id="total_seasons" placeholder="1" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="ongoing_ind">Ongoing?</label>
-                    <input type="checkbox" name="ongoing_ind" id="ongoing_ind">
-                </div>
-
-                <div class="form-group">
-                    <label for="complete_collection">Complete Collection?</label>
-                    <input type="checkbox" name="complete_collection" id="complete_collection">
-                </div>
-
-                <div class="form-group">
-                    <label for="brand">Brand</label>
-                    <input type="text" name="brand" id="brand">
-                </div>
-
-                <div class="form-group">
-                    <label for="tmdb_id">TMDB ID</label>
-                    <input type="text" name="tmdb_id" id="tmdb_id">
-                </div>
-            </fieldset>
-
-            <button type="submit" name="submit_media">Save to Media Table</button>
-        </form>
-
-        {% if movie_id %}
-        <div class="success-banner">
-            <p>Media record created successfully.</p>
-            <p>Generated ID: <strong>{{ movie_id }}</strong></p>
-        </div>
-        {% endif %}
+<!-- Step Tabs -->
+<div class="wizard-tabs">
+    <div class="wizard-tab {% if not movie_id %}active{% endif %} {% if movie_id %}complete{% endif %}" data-step="1">
+        <span class="wizard-tab-num">{% if movie_id %}✓{% else %}1{% endif %}</span>
+        <span class="wizard-tab-label">Media Info</span>
     </div>
-
-    <!-- Card 2: DVD Specifics -->
-    <div class="carousel-card">
-        <form method="post">
-            <fieldset>
-                <legend>DVD Specifics</legend>
-
-                <div class="form-group">
-                    <label for="media_title_id">Media Title ID</label>
-                    <input type="number" step="1" name="media_title_id" id="media_title_id"
-                           value="{{ movie_id or '' }}" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="season_number">Season Number</label>
-                    <input type="number" step="1" name="season_number" id="season_number" placeholder="1">
-                </div>
-
-                <div class="form-group">
-                    <label for="season_part">Season Part</label>
-                    <input type="number" step="1" name="season_part" id="season_part">
-                </div>
-
-                <div class="form-group">
-                    <label for="episodes">Episodes</label>
-                    <input type="number" step="1" name="episodes" id="episodes" placeholder="1">
-                </div>
-
-                <div class="form-group">
-                    <label for="location_label">Location</label>
-                    <input type="text" name="location_label" id="location_label">
-                </div>
-
-                <div class="form-group">
-                    <label for="season_name">Season Name</label>
-                    <input type="text" name="season_name" id="season_name">
-                </div>
-
-                <div class="form-group">
-                    <label for="box_set">Box Set?</label>
-                    <input type="checkbox" name="box_set" id="box_set">
-                </div>
-
-                <div class="form-group">
-                    <label for="complete_season">Complete Season?</label>
-                    <input type="checkbox" name="complete_season" id="complete_season">
-                </div>
-
-                <div class="form-group">
-                    <label for="tmdb_id_dvd">TMDB ID</label>
-                    <input type="text" name="tmdb_id" id="tmdb_id_dvd">
-                </div>
-
-                <div class="form-group">
-                    <label for="disk_type">Disk Type</label>
-                    <select name="disk_type" id="disk_type">
-                        <option value="" disabled selected>Select format...</option>
-                        <option value="dvd">DVD</option>
-                        <option value="BR">BR</option>
-                        <option value="BR/dvd">BR/DVD</option>
-                        <option value="4K">4K</option>
-                        <option value="4K/BR">4K/BR</option>
-                        <option value="4K/BR/Digital">4K/BR/Digital</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="disk_region">Disk Region</label>
-                    <select name="disk_region" id="disk_region">
-                        <option value="" disabled selected>Select region...</option>
-                        {% for r in range(1, 6) %}
-                            <option value="{{ r }}">{{ r }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="file_size">File Size</label>
-                    <input type="number" step="0.01" name="file_size" id="file_size">
-                </div>
-
-                <div class="form-group">
-                    <label for="category">Category</label>
-                    <input type="text" name="category" id="category">
-                </div>
-
-                <div class="form-group">
-                    <label for="compressed">Compressed?</label>
-                    <input type="checkbox" name="compressed" id="compressed">
-                </div>
-
-                <div class="form-group">
-                    <label for="adjusted_file_size">Adjusted File Size</label>
-                    <input type="number" step="0.01" name="adjusted_file_size" id="adjusted_file_size">
-                </div>
-
-                <div class="form-group">
-                    <label for="disk_type_uploaded">Disk Type Uploaded</label>
-                    <input type="text" name="disk_type_uploaded" id="disk_type_uploaded">
-                </div>
-            </fieldset>
-
-            <button type="submit" name="submit_dvd">Save to DVD Table</button>
-        </form>
-
-        {% if dvd_id %}
-        <div class="success-banner">
-            <p>DVD record created successfully.</p>
-            <p>Generated ID: <strong>{{ dvd_id }}</strong></p>
-        </div>
-        {% endif %}
+    <div class="wizard-divider"></div>
+    <div class="wizard-tab {% if movie_id and not dvd_id %}active{% endif %} {% if dvd_id %}complete{% endif %} {% if not movie_id %}locked{% endif %}" data-step="2">
+        <span class="wizard-tab-num">{% if dvd_id %}✓{% else %}2{% endif %}</span>
+        <span class="wizard-tab-label">DVD Specifics</span>
     </div>
-
-    <!-- Card 3: Purchase History -->
-    <div class="carousel-card">
-        <form method="post">
-            <fieldset>
-                <legend>Purchase History</legend>
-
-                <div class="form-group">
-                    <label for="dvd_item_id">DVD Item ID</label>
-                    <input type="number" step="1" name="dvd_item_id" id="dvd_item_id"
-                           value="{{ dvd_id or '' }}" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="purchase_date">Purchase Date</label>
-                    <input type="date" name="purchase_date" id="purchase_date" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="cost">Price Paid</label>
-                    <input type="number" step="0.01" name="cost" id="cost" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="store">Store</label>
-                    <input type="text" name="store" id="store">
-                </div>
-
-                <div class="form-group">
-                    <label for="condition">Condition</label>
-                    <select name="condition" id="condition">
-                        <option value="New">New</option>
-                        <option value="Used">Used</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="notes">Notes</label>
-                    <input type="text" name="notes" id="notes">
-                </div>
-            </fieldset>
-
-            <button type="submit" name="submit_purchase">Save to Purchase Table</button>
-        </form>
-
-        {% if purchase_id %}
-        <div class="success-banner">
-            <p>Purchase record created successfully.</p>
-            <p>Generated ID: <strong>{{ purchase_id }}</strong></p>
-        </div>
-        {% endif %}
+    <div class="wizard-divider"></div>
+    <div class="wizard-tab {% if dvd_id and not purchase_id %}active{% endif %} {% if purchase_id %}complete{% endif %} {% if not dvd_id %}locked{% endif %}" data-step="3">
+        <span class="wizard-tab-num">{% if purchase_id %}✓{% else %}3{% endif %}</span>
+        <span class="wizard-tab-label">Purchase</span>
     </div>
-
 </div>
+
+<!-- Step 1: Media Info -->
+{% if not movie_id %}
+<div class="wizard-step">
+    <form method="post">
+        <fieldset>
+            <legend>Media Information</legend>
+
+            <div class="form-group">
+                <label for="title">Title</label>
+                <input type="text" name="title" id="title" required>
+            </div>
+
+            <div class="form-group">
+                <label for="type">Movie or Show</label>
+                <select name="type" id="type" required>
+                    <option value="" disabled selected>Select format...</option>
+                    <option value="movie">Movie</option>
+                    <option value="tv_show">TV Show</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="genre">Genre</label>
+                <input type="text" name="genre" id="genre" required>
+            </div>
+
+            <div class="form-group">
+                <label for="total_seasons">Total Seasons</label>
+                <input type="number" step="1" name="total_seasons" id="total_seasons" placeholder="1" required>
+            </div>
+
+            <div class="form-group">
+                <label for="ongoing_ind">Ongoing?</label>
+                <input type="checkbox" name="ongoing_ind" id="ongoing_ind">
+            </div>
+
+            <div class="form-group">
+                <label for="complete_collection">Complete Collection?</label>
+                <input type="checkbox" name="complete_collection" id="complete_collection">
+            </div>
+
+            <div class="form-group">
+                <label for="brand">Brand</label>
+                <input type="text" name="brand" id="brand">
+            </div>
+
+            <div class="form-group">
+                <label for="tmdb_id">TMDB ID</label>
+                <input type="text" name="tmdb_id" id="tmdb_id">
+            </div>
+        </fieldset>
+
+        <button type="submit" name="submit_media">Save Media Record</button>
+    </form>
+</div>
+
+{% elif movie_id and not dvd_id %}
+<!-- Step 1 Success -->
+<div class="wizard-step">
+    <div class="success-banner">
+        <p>✓ Media record saved successfully.</p>
+        <p>Generated ID: <strong>{{ movie_id }}</strong></p>
+    </div>
+    <a href="{{ url_for('media.add_media', new_id=movie_id, dvd_id='') }}" class="wizard-next-btn">
+        Next: DVD Specifics →
+    </a>
+</div>
+{% endif %}
+
+<!-- Step 2: DVD Specifics -->
+{% if movie_id and not dvd_id %}
+<div class="wizard-step" style="margin-top: 20px;">
+    <form method="post">
+        <fieldset>
+            <legend>DVD Specifics</legend>
+
+            <div class="form-group">
+                <label for="media_title_id">Media Title ID</label>
+                <input type="number" step="1" name="media_title_id" id="media_title_id"
+                       value="{{ movie_id }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="season_number">Season Number</label>
+                <input type="number" step="1" name="season_number" id="season_number" placeholder="1">
+            </div>
+
+            <div class="form-group">
+                <label for="season_part">Season Part</label>
+                <input type="number" step="1" name="season_part" id="season_part">
+            </div>
+
+            <div class="form-group">
+                <label for="episodes">Episodes</label>
+                <input type="number" step="1" name="episodes" id="episodes" placeholder="1">
+            </div>
+
+            <div class="form-group">
+                <label for="location_label">Location</label>
+                <input type="text" name="location_label" id="location_label">
+            </div>
+
+            <div class="form-group">
+                <label for="season_name">Season Name</label>
+                <input type="text" name="season_name" id="season_name">
+            </div>
+
+            <div class="form-group">
+                <label for="box_set">Box Set?</label>
+                <input type="checkbox" name="box_set" id="box_set">
+            </div>
+
+            <div class="form-group">
+                <label for="complete_season">Complete Season?</label>
+                <input type="checkbox" name="complete_season" id="complete_season">
+            </div>
+
+            <div class="form-group">
+                <label for="tmdb_id_dvd">TMDB ID</label>
+                <input type="text" name="tmdb_id" id="tmdb_id_dvd">
+            </div>
+
+            <div class="form-group">
+                <label for="disk_type">Disk Type</label>
+                <select name="disk_type" id="disk_type">
+                    <option value="" disabled selected>Select format...</option>
+                    <option value="dvd">DVD</option>
+                    <option value="BR">BR</option>
+                    <option value="BR/dvd">BR/DVD</option>
+                    <option value="4K">4K</option>
+                    <option value="4K/BR">4K/BR</option>
+                    <option value="4K/BR/Digital">4K/BR/Digital</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="disk_region">Disk Region</label>
+                <select name="disk_region" id="disk_region">
+                    <option value="" disabled selected>Select region...</option>
+                    {% for r in range(1, 6) %}
+                        <option value="{{ r }}">{{ r }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="file_size">File Size</label>
+                <input type="number" step="0.01" name="file_size" id="file_size">
+            </div>
+
+            <div class="form-group">
+                <label for="category">Category</label>
+                <input type="text" name="category" id="category">
+            </div>
+
+            <div class="form-group">
+                <label for="compressed">Compressed?</label>
+                <input type="checkbox" name="compressed" id="compressed">
+            </div>
+
+            <div class="form-group">
+                <label for="adjusted_file_size">Adjusted File Size</label>
+                <input type="number" step="0.01" name="adjusted_file_size" id="adjusted_file_size">
+            </div>
+
+            <div class="form-group">
+                <label for="disk_type_uploaded">Disk Type Uploaded</label>
+                <input type="text" name="disk_type_uploaded" id="disk_type_uploaded">
+            </div>
+        </fieldset>
+
+        <button type="submit" name="submit_dvd">Save DVD Record</button>
+    </form>
+</div>
+
+{% elif dvd_id and not purchase_id %}
+<!-- Step 2 Success -->
+<div class="wizard-step">
+    <div class="success-banner">
+        <p>✓ DVD record saved successfully.</p>
+        <p>Generated ID: <strong>{{ dvd_id }}</strong></p>
+    </div>
+    <a href="{{ url_for('media.add_media', new_id=movie_id, dvd_id=dvd_id) }}" class="wizard-next-btn">
+        Next: Purchase Info →
+    </a>
+</div>
+{% endif %}
+
+<!-- Step 3: Purchase Info -->
+{% if dvd_id and not purchase_id %}
+<div class="wizard-step" style="margin-top: 20px;">
+    <form method="post">
+        <fieldset>
+            <legend>Purchase History</legend>
+
+            <div class="form-group">
+                <label for="dvd_item_id">DVD Item ID</label>
+                <input type="number" step="1" name="dvd_item_id" id="dvd_item_id"
+                       value="{{ dvd_id }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="purchase_date">Purchase Date</label>
+                <input type="date" name="purchase_date" id="purchase_date" required>
+            </div>
+
+            <div class="form-group">
+                <label for="cost">Price Paid</label>
+                <input type="number" step="0.01" name="cost" id="cost" required>
+            </div>
+
+            <div class="form-group">
+                <label for="store">Store</label>
+                <input type="text" name="store" id="store">
+            </div>
+
+            <div class="form-group">
+                <label for="condition">Condition</label>
+                <select name="condition" id="condition">
+                    <option value="New">New</option>
+                    <option value="Used">Used</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">Notes</label>
+                <input type="text" name="notes" id="notes">
+            </div>
+        </fieldset>
+
+        <button type="submit" name="submit_purchase">Save Purchase Record</button>
+    </form>
+</div>
+
+{% elif purchase_id %}
+<!-- All done -->
+<div class="wizard-step">
+    <div class="success-banner">
+        <p>✓ Purchase record saved successfully.</p>
+        <p>Generated ID: <strong>{{ purchase_id }}</strong></p>
+    </div>
+    <div class="wizard-done">
+        <p>All three records saved! What would you like to do next?</p>
+        <div class="wizard-done-actions">
+            <a href="{{ url_for('media.add_media') }}" class="wizard-next-btn">Add Another</a>
+            <a href="{{ url_for('home.home') }}" class="wizard-next-btn wizard-next-btn--secondary">Back to Home</a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+    /* ── Wizard Tabs ─────────────────────────────────────────── */
+    .wizard-tabs {
+        display: flex;
+        align-items: center;
+        margin-bottom: 32px;
+        gap: 0;
+    }
+    .wizard-tab {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        opacity: 0.4;
+        transition: all var(--transition);
+        flex: 1;
+        justify-content: center;
+    }
+    .wizard-tab.active {
+        opacity: 1;
+        border-color: var(--gold);
+        background: var(--gold-dim);
+    }
+    .wizard-tab.complete {
+        opacity: 1;
+        border-color: rgba(92,224,138,0.3);
+        background: rgba(92,224,138,0.06);
+    }
+    .wizard-tab.locked {
+        opacity: 0.25;
+        cursor: not-allowed;
+    }
+    .wizard-tab-num {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.78rem;
+        font-weight: 700;
+        background: var(--bg-raised);
+        border: 1px solid var(--border-mid);
+        flex-shrink: 0;
+    }
+    .wizard-tab.active .wizard-tab-num {
+        background: var(--gold);
+        color: #0a0a0c;
+        border-color: var(--gold);
+    }
+    .wizard-tab.complete .wizard-tab-num {
+        background: var(--green);
+        color: #0a0a0c;
+        border-color: var(--green);
+    }
+    .wizard-tab-label {
+        font-size: 0.82rem;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+    }
+    .wizard-divider {
+        height: 1px;
+        width: 24px;
+        background: var(--border);
+        flex-shrink: 0;
+    }
+
+    /* ── Wizard Step ─────────────────────────────────────────── */
+    .wizard-step {
+        max-width: 560px;
+        animation: fadeUp 250ms ease both;
+    }
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Next Button ─────────────────────────────────────────── */
+    .wizard-next-btn {
+        display: inline-block;
+        margin-top: 16px;
+        background: var(--gold);
+        color: #0a0a0c;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.88rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        padding: 11px 24px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all var(--transition);
+    }
+    .wizard-next-btn:hover {
+        background: var(--gold-light);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 20px rgba(201,168,76,0.25);
+    }
+    .wizard-next-btn--secondary {
+        background: transparent;
+        border: 1px solid var(--border-mid);
+        color: var(--text-mid);
+        margin-left: 10px;
+    }
+    .wizard-next-btn--secondary:hover {
+        background: var(--bg-raised);
+        box-shadow: none;
+        color: var(--text);
+    }
+
+    /* ── Done State ──────────────────────────────────────────── */
+    .wizard-done {
+        margin-top: 20px;
+    }
+    .wizard-done p {
+        margin-bottom: 14px;
+    }
+    .wizard-done-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    /* Mobile */
+    @media (max-width: 500px) {
+        .wizard-tab-label { display: none; }
+        .wizard-tab { flex: 0 0 auto; padding: 10px 12px; }
+        .wizard-divider { flex: 1; }
+    }
+</style>
 
 {% endblock %}

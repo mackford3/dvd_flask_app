@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, current_app
 from extensions import db
 from utilities import clean_int
 
@@ -10,12 +10,7 @@ def _checkbox(field: str) -> bool:
 
 
 def _get_models():
-    """
-    Import models at call time (not at module load time) so that
-    reflection has already run before we reference the table classes.
-    """
-    import dvd
-    return dvd.Titles, dvd.Dvds, dvd.Purchases
+    return current_app.Titles, current_app.Dvds, current_app.Purchases
 
 
 def _handle_media_form():
@@ -77,7 +72,8 @@ def _handle_purchase_form():
 
 @media_bp.route('/add_media', methods=['GET', 'POST'])
 def add_media():
-    new_id      = request.args.get('new_id')
+    # Read all possible IDs from query string
+    movie_id    = request.args.get('new_id')
     dvd_id      = request.args.get('dvd_id')
     purchase_id = request.args.get('purchase_id')
 
@@ -86,19 +82,26 @@ def add_media():
 
         if 'submit_media' in form:
             new_id = _handle_media_form()
+            # Redirect with new_id so step 1 shows success + Next button
             return redirect(url_for('media.add_media', new_id=new_id))
 
         elif 'submit_dvd' in form:
-            dvd_id = _handle_dvd_form()
-            return redirect(url_for('media.add_media', dvd_id=dvd_id))
+            new_dvd_id = _handle_dvd_form()
+            # Keep movie_id so tabs stay correct, pass dvd_id for step 2 success
+            return redirect(url_for('media.add_media',
+                                    new_id=form.get('media_title_id'),
+                                    dvd_id=new_dvd_id))
 
         elif 'submit_purchase' in form:
-            purchase_id = _handle_purchase_form()
-            return redirect(url_for('media.add_media', purchase_id=purchase_id))
+            new_purchase_id = _handle_purchase_form()
+            return redirect(url_for('media.add_media',
+                                    new_id=movie_id,
+                                    dvd_id=dvd_id,
+                                    purchase_id=new_purchase_id))
 
     return render_template(
         'add_media.html',
-        movie_id=new_id,
+        movie_id=movie_id,
         dvd_id=dvd_id,
         purchase_id=purchase_id,
     )
