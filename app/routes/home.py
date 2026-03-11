@@ -1,10 +1,12 @@
-from flask import Blueprint, render_template, current_app
+import os
+from flask import Blueprint, render_template
 from sqlalchemy import text
 from extensions import db
 from queries import (
     recent_dvds_query,
     stats_query,
     cost_by_store_query,
+    random_posters_query,
 )
 
 home_bp = Blueprint('home', __name__)
@@ -23,6 +25,7 @@ def home():
     costs       = _fetch(stats_query('type, SUM(cost) AS sum', group_by='type'))
     cost_disks  = _fetch(stats_query('disk_type, SUM(cost) AS sum', group_by='disk_type'))
     cost_stores = _fetch(cost_by_store_query())
+    posters     = _fetch(random_posters_query())
 
     return render_template(
         'home.html',
@@ -33,4 +36,6 @@ def home():
         costs=costs,
         cost_disks=cost_disks,
         cost_stores=cost_stores,
+        posters=posters,
+        tmdb_api_key=os.getenv('TMDB_API_KEY'),
     )

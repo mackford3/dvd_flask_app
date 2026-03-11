@@ -55,11 +55,33 @@ def stats_query(select: str, group_by: str = None) -> str:
         sql += f" GROUP BY {group_by}"
     return sql
 
+
 def location_count_query() -> str:
     return f"""
         SELECT COUNT(*) AS count
         FROM ({base_query()}) AS sub
         WHERE location_label ILIKE :loc
+    """
+
+
+def random_posters_query() -> str:
+    """
+    Returns a distinct set of random titles that have a tmdb_id,
+    deduplicated at the media_title level so we don't repeat the
+    same movie for multiple disk editions.
+    """
+    schema = os.getenv('DB_SCHEMA')
+    return f"""
+        SELECT DISTINCT ON (mt.id)
+            mt.id       AS media_title_id,
+            mt.title,
+            mt.type,
+            COALESCE(di.tmdb_id, mt.tmdb_id) AS tmdb_id
+        FROM {schema}.media_titles mt
+        JOIN {schema}.dvd_items di ON di.media_title_id = mt.id
+        WHERE COALESCE(di.tmdb_id, mt.tmdb_id) IS NOT NULL
+        ORDER BY mt.id, RANDOM()
+        LIMIT 30
     """
 
 

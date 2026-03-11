@@ -21,6 +21,213 @@
     </div>
 </div>
 
+<!-- Poster Strip -->
+{% if posters %}
+<section class="poster-strip-section">
+    <h3 class="poster-strip-label">From Your Collection</h3>
+    <div class="poster-track-wrapper">
+        <div class="poster-track" id="posterTrack">
+            <!-- Rendered twice for seamless infinite loop -->
+            {% for item in posters %}
+            <a class="poster-card"
+               href="https://www.themoviedb.org/{{ 'movie' if item.type == 'movie' else 'tv' }}/{{ item.tmdb_id }}"
+               target="_blank"
+               data-tmdb-id="{{ item.tmdb_id }}"
+               data-type="{{ item.type }}"
+               data-title="{{ item.title }}">
+                <div class="poster-img-wrap">
+                    <img class="poster-img" src="" alt="{{ item.title }}" loading="lazy">
+                    <div class="poster-placeholder">🎬</div>
+                </div>
+                <span class="poster-title">{{ item.title }}</span>
+            </a>
+            {% endfor %}
+            <!-- Duplicate for seamless loop -->
+            {% for item in posters %}
+            <a class="poster-card"
+               href="https://www.themoviedb.org/{{ 'movie' if item.type == 'movie' else 'tv' }}/{{ item.tmdb_id }}"
+               target="_blank"
+               data-tmdb-id="{{ item.tmdb_id }}"
+               data-type="{{ item.type }}"
+               data-title="{{ item.title }}">
+                <div class="poster-img-wrap">
+                    <img class="poster-img" src="" alt="{{ item.title }}" loading="lazy">
+                    <div class="poster-placeholder">🎬</div>
+                </div>
+                <span class="poster-title">{{ item.title }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<style>
+    .poster-strip-section {
+        margin-bottom: 36px;
+        overflow: hidden;
+    }
+    .poster-strip-label {
+        margin-bottom: 14px;
+    }
+    .poster-track-wrapper {
+        overflow-x: auto;
+        overflow-y: hidden;
+        width: 100%;
+        cursor: grab;
+        mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+        -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .poster-track-wrapper::-webkit-scrollbar { display: none; }
+
+    .poster-track {
+        display: flex;
+        gap: 12px;
+        width: max-content;
+        animation: posterScroll 200s linear infinite; /*auto scroll*/
+    }
+    .poster-track:hover {
+        animation-play-state: paused;
+    }
+    @keyframes posterScroll {
+        0%   { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+    }
+    .poster-card {
+        flex: 0 0 110px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        cursor: pointer;
+        transition: transform 200ms ease;
+    }
+    .poster-card:hover {
+        transform: translateY(-4px) scale(1.04);
+    }
+    .poster-img-wrap {
+        position: relative;
+        width: 110px;
+        height: 165px;
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+    }
+    .poster-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 8px;
+        opacity: 0;
+        transition: opacity 300ms ease;
+    }
+    .poster-img.loaded {
+        opacity: 1;
+    }
+    .poster-placeholder {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: var(--text-dim);
+    }
+    .poster-placeholder.hidden {
+        display: none;
+    }
+    .poster-title {
+        font-size: 0.7rem;
+        color: var(--text-dim);
+        text-align: center;
+        width: 110px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        transition: color 200ms ease;
+    }
+    .poster-card:hover .poster-title {
+        color: var(--gold);
+    }
+</style>
+
+<script>
+(function() {
+    const TMDB_KEY = "{{ tmdb_api_key }}";
+    const BASE_IMG = "https://image.tmdb.org/t/p/w200";
+
+    // Only fetch for unique tmdb_ids — deduplicate across the doubled list
+    const seen = new Set();
+    const posterCache = {};
+
+    async function fetchPoster(tmdbId, type) {
+        if (posterCache[tmdbId]) return posterCache[tmdbId];
+        const endpoint = type === 'movie'
+            ? `https://api.themoviedb.org/3/movie/${tmdbId}?api_key=${TMDB_KEY}`
+            : `https://api.themoviedb.org/3/tv/${tmdbId}?api_key=${TMDB_KEY}`;
+        try {
+            const res = await fetch(endpoint);
+            if (!res.ok) return null;
+            const data = await res.json();
+            const path = data.poster_path || null;
+            posterCache[tmdbId] = path;
+            return path;
+        } catch {
+            return null;
+        }
+    }
+
+    async function loadPosters() {
+        const cards = document.querySelectorAll('.poster-card');
+        for (const card of cards) {
+            const tmdbId = card.dataset.tmdbId;
+            const type   = card.dataset.type;
+            if (!tmdbId || seen.has(tmdbId + card.dataset.title)) continue;
+            seen.add(tmdbId + card.dataset.title);
+
+            const path = await fetchPoster(tmdbId, type);
+            // Apply to ALL cards with this tmdb_id (original + duplicate)
+            if (path) {
+                document.querySelectorAll(`.poster-card[data-tmdb-id="${tmdbId}"]`)
+                    .forEach(c => {
+                        const img = c.querySelector('.poster-img');
+                        const placeholder = c.querySelector('.poster-placeholder');
+                        img.onload = () => {
+                            img.classList.add('loaded');
+                            placeholder.classList.add('hidden');
+                        };
+                        img.src = BASE_IMG + path;
+                    });
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadPosters);
+})();
+// Drag to scroll
+const wrapper = document.querySelector('.poster-track-wrapper');
+let isDown = false, startX, scrollLeft;
+
+wrapper.addEventListener('mousedown', e => {
+    isDown = true;
+    wrapper.style.cursor = 'grabbing';
+    startX = e.pageX - wrapper.offsetLeft;
+    scrollLeft = wrapper.scrollLeft;
+});
+wrapper.addEventListener('mouseleave', () => { isDown = false; wrapper.style.cursor = 'grab'; });
+wrapper.addEventListener('mouseup', () => { isDown = false; wrapper.style.cursor = 'grab'; });
+wrapper.addEventListener('mousemove', e => {
+    if (!isDown) return;
+    e.preventDefault();
+    const x = e.pageX - wrapper.offsetLeft;
+    wrapper.scrollLeft = scrollLeft - (x - startX) * 1.5;
+});
+</script>
+
 <!-- Recently Added -->
 <h3>Recently Added DVDs</h3>
 <table>
