@@ -19,8 +19,10 @@ def create_app(config=Config) -> Flask:
     db.init_app(app)
 
     with app.app_context():
-        global Titles, Dvds, Purchases
         Titles, Dvds, Purchases = reflect_models()
+        app.Titles    = Titles      
+        app.Dvds      = Dvds
+        app.Purchases = Purchases
 
     app.register_blueprint(home_bp)
     app.register_blueprint(search_bp)

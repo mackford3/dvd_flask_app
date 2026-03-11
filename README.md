@@ -169,9 +169,9 @@ A Jinja2 macro that renders the search form. Imported into both `home.html` and 
 
 ## Known Limitations / Future Ideas
 
-- [ ] Sequential add media flow (step 1 → 2 → 3 instead of side-by-side carousel)
-- [ ] Rotating TMDB poster images on home page
+- [x] Sequential add media flow (step 1 → 2 → 3 instead of side-by-side carousel)
+- [x] Rotating TMDB poster images on home page
 - [ ] Hero background video
 - [ ] Show titles with missing/null values
-- [ ] Order search results by relevance
+- [x] Order search results by relevance
 - [ ] Make accessible from outside local network
