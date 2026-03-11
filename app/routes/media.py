@@ -1,3 +1,4 @@
+import os
 from flask import Blueprint, render_template, request, redirect, url_for, current_app
 from extensions import db
 from utilities import clean_int
@@ -72,7 +73,6 @@ def _handle_purchase_form():
 
 @media_bp.route('/add_media', methods=['GET', 'POST'])
 def add_media():
-    # Read all possible IDs from query string
     movie_id    = request.args.get('new_id')
     dvd_id      = request.args.get('dvd_id')
     purchase_id = request.args.get('purchase_id')
@@ -82,12 +82,10 @@ def add_media():
 
         if 'submit_media' in form:
             new_id = _handle_media_form()
-            # Redirect with new_id so step 1 shows success + Next button
             return redirect(url_for('media.add_media', new_id=new_id))
 
         elif 'submit_dvd' in form:
             new_dvd_id = _handle_dvd_form()
-            # Keep movie_id so tabs stay correct, pass dvd_id for step 2 success
             return redirect(url_for('media.add_media',
                                     new_id=form.get('media_title_id'),
                                     dvd_id=new_dvd_id))
@@ -104,4 +102,5 @@ def add_media():
         movie_id=movie_id,
         dvd_id=dvd_id,
         purchase_id=purchase_id,
+        tmdb_api_key=os.getenv('TMDB_API_KEY'),
     )
