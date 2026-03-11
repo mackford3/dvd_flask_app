@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<header>
+    <h1>QR Code Results</h1>
+</header>
+
+<h2>Location: {{ param['loc'] }}</h2>
+<p>Total items in this location: <strong>{{ counts[0].count }}</strong></p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Location</th>
+            <th>Title</th>
+            <th>Sub Title</th>
+            <th>Type</th>
+            <th>Disk Type</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in box_results %}
+        <tr>
+            <td>{{ item['location_label'] }}</td>
+            <td>{{ item['title'] }}</td>
+            <td>{{ item['season_name'] }}</td>
+            <td>{{ item['type'] }}</td>
+            <td>{{ item['disk_type'] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

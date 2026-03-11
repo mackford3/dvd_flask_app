@@ -6,11 +6,13 @@ __pycache__/
 
 #folders 
 config/
-static/img/
-static/video/
+app/config/
+app/static/img/
+app/static/video/
 
 #files
 requirements.txt
+.DS_Store
 
 
 # C extensions

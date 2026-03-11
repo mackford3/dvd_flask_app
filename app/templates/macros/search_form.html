@@ -1,0 +1,14 @@
+{% macro search_form(show_location=False) %}
+<section class="search-container">
+    <form action="/search" method="GET">
+        <input type="text" name="name" placeholder="Search by name...">
+        {% if show_location %}
+            <input type="text" name="location" placeholder="Search by location label...">
+        {% endif %}
+        <button type="submit">Search</button>
+        <a href="{{ url_for('search.search') }}">
+            <button type="button">Clear Filters</button>
+        </a>
+    </form>
+</section>
+{% endmacro %}

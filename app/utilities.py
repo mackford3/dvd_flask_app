@@ -50,7 +50,7 @@ def clean_int(value):
     if value is None or str(value).strip() == '':
         return None
     try:
-        return int(value)
+        return float(value)
     except (ValueError, TypeError):
         return None
 

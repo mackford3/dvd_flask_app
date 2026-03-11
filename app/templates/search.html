@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+{% from "macros/search_form.html" import search_form %}
+
+{% block content %}
+
+<header>
+    <h1>Media Catalog Search</h1>
+</header>
+
+{{ search_form(show_location=True) }}
+
+<h3>Results</h3>
+
+<table>
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Sub Title</th>
+            <th>Type</th>
+            <th>Genre</th>
+            <th>Disk Type</th>
+            <th>Location</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for dvd in search_dvds %}
+        <tr>
+            <td><strong>{{ dvd['title'] }}</strong></td>
+            <td>{{ dvd['season_name'] }}</td>
+            <td>{{ dvd['type'] }}</td>
+            <td>{{ dvd['genre'] }}</td>
+            <td>{{ dvd['disk_type'] }}</td>
+            <td>{{ dvd['location_label'] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
