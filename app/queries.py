@@ -74,6 +74,7 @@ def random_posters_query() -> str:
     """
     schema = os.getenv('DB_SCHEMA')
     return f"""
+        SELECT * FROM (
         SELECT DISTINCT ON (mt.id)
             mt.id       AS media_title_id,
             mt.title,
@@ -82,7 +83,9 @@ def random_posters_query() -> str:
         FROM {schema}.media_titles mt
         JOIN {schema}.dvd_items di ON di.media_title_id = mt.id
         WHERE COALESCE(di.tmdb_id, mt.tmdb_id) IS NOT NULL
-        ORDER BY mt.id, RANDOM()
+        ORDER BY mt.id
+        ) as deduped
+        ORDER BY random()
         LIMIT 30
     """
 

@@ -6,6 +6,7 @@ from routes.home import home_bp
 from routes.search import search_bp
 from routes.media import media_bp
 from routes.api import api_bp
+from routes.titles import title_bp
 
 Titles    = None
 Dvds      = None
@@ -28,6 +29,7 @@ def create_app(config=Config) -> Flask:
     app.register_blueprint(search_bp)
     app.register_blueprint(media_bp)
     app.register_blueprint(api_bp)
+    app.register_blueprint(title_bp)
 
     return app
 

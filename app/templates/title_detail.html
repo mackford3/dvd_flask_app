@@ -1,0 +1,417 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<!-- Back button -->
+<a href="javascript:history.back()" class="back-btn">← Back</a>
+
+<!-- Hero: Poster + Title Info -->
+<div class="detail-hero">
+    <div class="detail-poster-wrap">
+        <div class="detail-poster-placeholder" id="posterPlaceholder">🎬</div>
+        <img id="detailPoster" class="detail-poster" src="" alt="{{ title.title }}">
+    </div>
+
+    <div class="detail-hero-info">
+        <div class="detail-type-badge">{{ title.type | replace('_', ' ') | title }}</div>
+        <h1 class="detail-title">{{ title.title }}</h1>
+
+        <div class="detail-meta-row">
+            {% if title.genre %}
+                <span class="detail-tag">{{ title.genre }}</span>
+            {% endif %}
+            {% if title.total_seasons %}
+                <span class="detail-tag">{{ title.total_seasons }} Season{% if title.total_seasons != 1 %}s{% endif %}</span>
+            {% endif %}
+            {% if title.ongoing_ind %}
+                <span class="detail-tag detail-tag--gold">Ongoing</span>
+            {% endif %}
+            {% if title.complete_collection %}
+                <span class="detail-tag detail-tag--green">Complete Collection</span>
+            {% endif %}
+        </div>
+
+        {% if title.brand %}
+        <p class="detail-brand">{{ title.brand }}</p>
+        {% endif %}
+
+        <!-- TMDB Overview (loaded via JS) -->
+        <p class="detail-overview" id="tmdbOverview"></p>
+
+        <!-- Stats row -->
+        <div class="detail-stats">
+            <div class="detail-stat">
+                <span class="detail-stat-label">Disks Owned</span>
+                <span class="detail-stat-value">{{ disks | length }}</span>
+            </div>
+            <div class="detail-stat">
+                <span class="detail-stat-label">Total Spent</span>
+                <span class="detail-stat-value">${{ "{:,.2f}".format(total_spend) }}</span>
+            </div>
+            {% if title.tmdb_id %}
+            <div class="detail-stat">
+                <a href="https://www.themoviedb.org/{{ 'movie' if title.type == 'movie' else 'tv' }}/{{ title.tmdb_id }}"
+                   target="_blank" class="detail-tmdb-link">
+                   View on TMDB ↗
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Disk Editions -->
+<h3 class="section-heading">Disk Editions</h3>
+
+{% if disks %}
+<div class="disk-list">
+    {% for disk in disks %}
+    <div class="disk-card">
+        <div class="disk-card-header">
+            <div class="disk-card-title">
+                {% if disk.season_name %}
+                    {{ disk.season_name }}
+                {% elif disk.season_number %}
+                    Season {{ disk.season_number }}{% if disk.season_part %} Part {{ disk.season_part }}{% endif %}
+                {% else %}
+                    {{ title.title }}
+                {% endif %}
+            </div>
+            <code class="disk-type-badge">{{ disk.disk_type or '—' }}</code>
+        </div>
+
+        <div class="disk-meta-grid">
+            {% if disk.location_label %}
+            <div class="disk-meta-item">
+                <span class="disk-meta-label">Location</span>
+                <span class="disk-meta-value">{{ disk.location_label }}</span>
+            </div>
+            {% endif %}
+            {% if disk.episodes %}
+            <div class="disk-meta-item">
+                <span class="disk-meta-label">Episodes</span>
+                <span class="disk-meta-value">{{ disk.episodes }}</span>
+            </div>
+            {% endif %}
+            {% if disk.disk_region %}
+            <div class="disk-meta-item">
+                <span class="disk-meta-label">Region</span>
+                <span class="disk-meta-value">{{ disk.disk_region }}</span>
+            </div>
+            {% endif %}
+            {% if disk.file_size %}
+            <div class="disk-meta-item">
+                <span class="disk-meta-label">File Size</span>
+                <span class="disk-meta-value">{{ disk.file_size }} GB</span>
+            </div>
+            {% endif %}
+            {% if disk.box_set %}
+            <div class="disk-meta-item">
+                <span class="disk-meta-label">Box Set</span>
+                <span class="disk-meta-value disk-meta-value--gold">Yes</span>
+            </div>
+            {% endif %}
+            {% if disk.complete_season %}
+            <div class="disk-meta-item">
+                <span class="disk-meta-label">Complete Season</span>
+                <span class="disk-meta-value disk-meta-value--green">Yes</span>
+            </div>
+            {% endif %}
+            {% if disk.category %}
+            <div class="disk-meta-item">
+                <span class="disk-meta-label">Category</span>
+                <span class="disk-meta-value">{{ disk.category }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Purchase Info -->
+        {% if disk.purchase_date or disk.cost %}
+        <div class="disk-purchase">
+            <span class="disk-purchase-label">Purchase</span>
+            <div class="disk-purchase-row">
+                {% if disk.purchase_date %}
+                    <span>{{ disk.purchase_date }}</span>
+                {% endif %}
+                {% if disk.cost %}
+                    <span class="disk-cost">${{ "{:,.2f}".format(disk.cost) }}</span>
+                {% endif %}
+                {% if disk.store %}
+                    <span>{{ disk.store }}</span>
+                {% endif %}
+                {% if disk.condition %}
+                    <span class="disk-condition">{{ disk.condition }}</span>
+                {% endif %}
+            </div>
+            {% if disk.notes %}
+                <p class="disk-notes">{{ disk.notes }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p class="empty-state">No disk editions recorded yet.</p>
+{% endif %}
+
+<!-- ── Styles ─────────────────────────────────────────────── -->
+<style>
+    .back-btn {
+        display: inline-block;
+        font-size: 0.82rem;
+        color: var(--text-dim);
+        text-decoration: none;
+        margin-bottom: 24px;
+        transition: color var(--transition);
+        letter-spacing: 0.02em;
+    }
+    .back-btn:hover { color: var(--gold); }
+
+    /* ── Hero ───────────────────────────────────────────────── */
+    .detail-hero {
+        display: flex;
+        gap: 28px;
+        margin-bottom: 40px;
+        align-items: flex-start;
+    }
+    .detail-poster-wrap {
+        flex-shrink: 0;
+        width: 140px;
+        height: 210px;
+        border-radius: var(--radius);
+        overflow: hidden;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        position: relative;
+    }
+    .detail-poster-placeholder {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: var(--text-dim);
+    }
+    .detail-poster {
+        width: 100%; height: 100%;
+        object-fit: cover;
+        display: none;
+    }
+    .detail-poster.loaded { display: block; }
+    .detail-poster.loaded + .detail-poster-placeholder { display: none; }
+
+    .detail-hero-info { flex: 1; min-width: 0; }
+
+    .detail-type-badge {
+        display: inline-block;
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--gold);
+        background: var(--gold-dim);
+        border: 1px solid rgba(201,168,76,0.2);
+        border-radius: 4px;
+        padding: 3px 8px;
+        margin-bottom: 10px;
+    }
+    .detail-title {
+        font-size: clamp(1.4rem, 4vw, 2rem);
+        margin-bottom: 12px;
+        line-height: 1.2;
+    }
+    .detail-meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 12px;
+    }
+    .detail-tag {
+        font-size: 0.75rem;
+        font-weight: 500;
+        background: var(--bg-raised);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 3px 9px;
+        color: var(--text-mid);
+    }
+    .detail-tag--gold  { color: var(--gold);  border-color: rgba(201,168,76,0.3);  background: var(--gold-dim); }
+    .detail-tag--green { color: var(--green); border-color: rgba(92,224,138,0.25); background: rgba(92,224,138,0.06); }
+
+    .detail-brand {
+        font-size: 0.82rem;
+        color: var(--text-dim);
+        margin-bottom: 10px;
+    }
+    .detail-overview {
+        font-size: 0.88rem;
+        color: var(--text-mid);
+        line-height: 1.65;
+        margin-bottom: 18px;
+        max-width: 520px;
+    }
+
+    .detail-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        align-items: center;
+    }
+    .detail-stat { display: flex; flex-direction: column; gap: 2px; }
+    .detail-stat-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); }
+    .detail-stat-value { font-size: 1.1rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+    .detail-tmdb-link {
+        font-size: 0.8rem;
+        color: var(--gold);
+        text-decoration: none;
+        border: 1px solid rgba(201,168,76,0.3);
+        border-radius: var(--radius-sm);
+        padding: 6px 12px;
+        transition: all var(--transition);
+    }
+    .detail-tmdb-link:hover { background: var(--gold-dim); }
+
+    /* ── Section Heading ────────────────────────────────────── */
+    .section-heading {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-dim);
+        margin-bottom: 16px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Disk Cards ─────────────────────────────────────────── */
+    .disk-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+    .disk-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px 20px;
+        transition: border-color var(--transition);
+    }
+    .disk-card:hover { border-color: var(--border-mid); }
+
+    .disk-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+        gap: 12px;
+    }
+    .disk-card-title { font-weight: 600; color: var(--text); font-size: 0.95rem; }
+    .disk-type-badge {
+        font-family: 'DM Mono', monospace;
+        font-size: 0.75rem;
+        background: var(--bg-raised);
+        color: var(--gold);
+        padding: 3px 8px;
+        border-radius: 4px;
+        border: 1px solid var(--border);
+        flex-shrink: 0;
+    }
+
+    .disk-meta-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px 24px;
+        margin-bottom: 14px;
+    }
+    .disk-meta-item { display: flex; flex-direction: column; gap: 2px; }
+    .disk-meta-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); }
+    .disk-meta-value { font-size: 0.85rem; color: var(--text-mid); }
+    .disk-meta-value--gold  { color: var(--gold); }
+    .disk-meta-value--green { color: var(--green); }
+
+    .disk-purchase {
+        border-top: 1px solid var(--border);
+        padding-top: 12px;
+        margin-top: 4px;
+    }
+    .disk-purchase-label {
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: var(--text-dim);
+        display: block;
+        margin-bottom: 6px;
+    }
+    .disk-purchase-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        font-size: 0.85rem;
+        color: var(--text-mid);
+        align-items: center;
+    }
+    .disk-cost { color: var(--text); font-weight: 600; }
+    .disk-condition {
+        font-size: 0.72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        background: var(--bg-raised);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 2px 7px;
+        color: var(--text-dim);
+    }
+    .disk-notes {
+        font-size: 0.82rem;
+        color: var(--text-dim);
+        margin-top: 6px;
+        font-style: italic;
+    }
+
+    .empty-state { color: var(--text-dim); font-size: 0.9rem; padding: 20px 0; }
+
+    /* ── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 500px) {
+        .detail-hero { flex-direction: column; align-items: center; text-align: center; }
+        .detail-meta-row { justify-content: center; }
+        .detail-stats { justify-content: center; }
+        .detail-overview { text-align: left; }
+    }
+</style>
+
+<!-- ── JS: Load TMDB poster + overview ───────────────────── -->
+<script>
+(function () {
+    const TMDB_KEY = "{{ tmdb_api_key or '' }}";
+    const tmdbId   = "{{ title.tmdb_id or '' }}";
+    const type     = "{{ title.type }}";
+
+    if (!TMDB_KEY || !tmdbId) return;
+
+    const endpoint = type === 'movie'
+        ? `https://api.themoviedb.org/3/movie/${tmdbId}?api_key=${TMDB_KEY}`
+        : `https://api.themoviedb.org/3/tv/${tmdbId}?api_key=${TMDB_KEY}`;
+
+    fetch(endpoint)
+        .then(r => r.json())
+        .then(data => {
+            // Poster
+            if (data.poster_path) {
+                const img = document.getElementById('detailPoster');
+                img.src = `https://image.tmdb.org/t/p/w300${data.poster_path}`;
+                img.onload = () => {
+                    img.classList.add('loaded');
+                    document.getElementById('posterPlaceholder').style.display = 'none';
+                };
+            }
+            // Overview
+            const overview = data.overview || '';
+            if (overview) {
+                document.getElementById('tmdbOverview').textContent = overview;
+            }
+        })
+        .catch(e => console.warn('TMDB fetch failed', e));
+})();
+</script>
+
+{% endblock %}

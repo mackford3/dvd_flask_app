@@ -25,7 +25,13 @@
     <tbody>
         {% for dvd in search_dvds %}
         <tr>
-            <td><strong>{{ dvd['title'] }}</strong></td>
+            <td>
+                <a href="{{ url_for('title.detail', title_id=dvd['media_title_id']) }}"
+                class="movie-link">
+                    <strong>{{ dvd['title'] }}</strong>
+                    <span class="hover-tip">View Details ↗</span>
+                </a>
+            </td>
             <td>{{ dvd['season_name'] }}</td>
             <td>{{ dvd['type'] }}</td>
             <td>{{ dvd['genre'] }}</td>

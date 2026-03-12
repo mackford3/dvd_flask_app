@@ -246,11 +246,10 @@ wrapper.addEventListener('mousemove', e => {
                           else "https://www.themoviedb.org/tv/" %}
         <tr>
             <td class="title-cell">
-                <a href="{{ base_url }}{{ dvd['tmdb_id'] }}"
-                   target="_blank"
-                   class="movie-link">
-                    <strong>{{ dvd['title'] }}</strong>
-                    <span class="hover-tip">View on TMDB ↗</span>
+                <a href="{{ url_for('title.detail', title_id=dvd['media_title_id']) }}"
+                class="movie-link">
+                <strong>{{ dvd['title'] }}</strong>
+                <span class="hover-tip">View Details ↗</span>
                 </a>
             </td>
             <td>{{ dvd['season_name'] }}</td>
