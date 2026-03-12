@@ -2,17 +2,14 @@
 
 FROM python:3.11-slim
 
-# Copy only requirements first for better caching. I could list all with pip, but want to practice with this 
+WORKDIR /app
+
 COPY requirements.txt .
 
-# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Added this copy because of my nested folder structure. I am removing the individual copy statements
-COPY . . 
+COPY app/ .
 
-CMD [ "python", "dvd_app.py" ]
+EXPOSE 5000
 
-
-
-
+CMD ["python", "dvd.py"]
