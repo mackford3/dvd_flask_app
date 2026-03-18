@@ -3,24 +3,24 @@
 {% block content %}
 
 <header>
-    <h1>New Media Entry</h1>
+    <h1>Chronicle a New Tale</h1>
 </header>
 
 <!-- Step Tabs -->
 <div class="wizard-tabs">
     <div class="wizard-tab {% if not movie_id %}active{% endif %} {% if movie_id %}complete{% endif %}" data-step="1">
         <span class="wizard-tab-num">{% if movie_id %}✓{% else %}1{% endif %}</span>
-        <span class="wizard-tab-label">Media Info</span>
+        <span class="wizard-tab-label">The Story</span>
     </div>
     <div class="wizard-divider"></div>
     <div class="wizard-tab {% if movie_id and not dvd_id %}active{% endif %} {% if dvd_id %}complete{% endif %} {% if not movie_id %}locked{% endif %}" data-step="2">
         <span class="wizard-tab-num">{% if dvd_id %}✓{% else %}2{% endif %}</span>
-        <span class="wizard-tab-label">DVD Specifics</span>
+        <span class="wizard-tab-label">The Volume</span>
     </div>
     <div class="wizard-divider"></div>
     <div class="wizard-tab {% if dvd_id and not purchase_id %}active{% endif %} {% if purchase_id %}complete{% endif %} {% if not dvd_id %}locked{% endif %}" data-step="3">
         <span class="wizard-tab-num">{% if purchase_id %}✓{% else %}3{% endif %}</span>
-        <span class="wizard-tab-label">Purchase</span>
+        <span class="wizard-tab-label">Acquisition</span>
     </div>
 </div>
 
@@ -29,7 +29,7 @@
 <div class="wizard-step">
     <form method="post" id="mediaForm">
         <fieldset>
-            <legend>Media Information</legend>
+            <legend>Story Information</legend>
 
             <!-- Title + TMDB Search -->
             <div class="form-group">
@@ -37,7 +37,7 @@
                 <div class="input-action-row">
                     <input type="text" name="title" id="title" required autocomplete="off">
                     <button type="button" class="btn-secondary" id="tmdbSearchBtn">
-                        Search TMDB
+                        Seek in TMDB
                     </button>
                 </div>
                 <span class="field-hint" id="titleHint"></span>
@@ -47,7 +47,7 @@
             <div id="tmdbResults" class="tmdb-results" style="display:none"></div>
 
             <div class="form-group">
-                <label for="type">Movie or Show</label>
+                <label for="type">Form of Story</label>
                 <select name="type" id="type" required>
                     <option value="" disabled selected>Select format...</option>
                     <option value="movie">Movie</option>
@@ -69,7 +69,7 @@
             </div>
 
             <div class="form-group">
-                <label for="ongoing_ind">Ongoing?</label>
+                <label for="ongoing_ind">Still Being Told?</label>
                 <input type="checkbox" name="ongoing_ind" id="ongoing_ind">
             </div>
 
@@ -89,19 +89,19 @@
             </div>
         </fieldset>
 
-        <button type="submit" name="submit_media">Save Media Record</button>
+        <button type="submit" name="submit_media">Begin the Chronicle</button>
     </form>
 </div>
 
 <!-- ── Duplicate Check Modal ──────────────────────────────── -->
 <div id="dupModal" class="modal-backdrop" style="display:none">
     <div class="modal">
-        <h2>Possible Duplicate Found</h2>
-        <p class="modal-subtitle">We found existing titles that match. Is this the same item?</p>
+        <h2>A Similar Tale Exists</h2>
+        <p class="modal-subtitle">We found chronicles that match this title. Is this the same tale?</p>
         <div id="dupList" class="dup-list"></div>
         <div class="modal-actions">
             <button type="button" class="btn-secondary" id="dupDismiss">
-                No — Create New Title
+                No — Chronicle as New
             </button>
         </div>
     </div>
@@ -111,11 +111,11 @@
 <!-- Step 1 Success -->
 <div class="wizard-step">
     <div class="success-banner">
-        <p>✓ Media record saved successfully.</p>
+        <p>✓ The tale has been recorded.</p>
         <p>Generated ID: <strong>{{ movie_id }}</strong></p>
     </div>
     <a href="{{ url_for('media.add_media', new_id=movie_id) }}" class="wizard-next-btn">
-        Next: DVD Specifics →
+        Next: The Volume →
     </a>
 </div>
 {% endif %}
@@ -125,7 +125,7 @@
 <div class="wizard-step" style="margin-top: 20px;">
     <form method="post">
         <fieldset>
-            <legend>DVD Specifics</legend>
+            <legend>Volume Details</legend>
 
             <div class="form-group">
                 <label for="media_title_id">Media Title ID</label>
@@ -149,12 +149,12 @@
             </div>
 
             <div class="form-group">
-                <label for="location_label">Location</label>
+                <label for="location_label">Storage Location</label>
                 <input type="text" name="location_label" id="location_label">
             </div>
 
             <div class="form-group">
-                <label for="season_name">Season Name</label>
+                <label for="season_name">Volume Name</label>
                 <input type="text" name="season_name" id="season_name">
             </div>
 
@@ -222,7 +222,7 @@
             </div>
         </fieldset>
 
-        <button type="submit" name="submit_dvd">Save DVD Record</button>
+        <button type="submit" name="submit_dvd">Record the Volume</button>
     </form>
 </div>
 
@@ -230,11 +230,11 @@
 <!-- Step 2 Success -->
 <div class="wizard-step">
     <div class="success-banner">
-        <p>✓ DVD record saved successfully.</p>
+        <p>✓ Volume has been recorded.</p>
         <p>Generated ID: <strong>{{ dvd_id }}</strong></p>
     </div>
     <a href="{{ url_for('media.add_media', new_id=movie_id, dvd_id=dvd_id) }}" class="wizard-next-btn">
-        Next: Purchase Info →
+        Next: Acquisition →
     </a>
 </div>
 {% endif %}
@@ -244,7 +244,7 @@
 <div class="wizard-step" style="margin-top: 20px;">
     <form method="post">
         <fieldset>
-            <legend>Purchase History</legend>
+            <legend>Acquisition Record</legend>
 
             <div class="form-group">
                 <label for="dvd_item_id">DVD Item ID</label>
@@ -263,7 +263,7 @@
             </div>
 
             <div class="form-group">
-                <label for="store">Store</label>
+                <label for="store">Merchant</label>
                 <input type="text" name="store" id="store">
             </div>
 
@@ -281,21 +281,21 @@
             </div>
         </fieldset>
 
-        <button type="submit" name="submit_purchase">Save Purchase Record</button>
+        <button type="submit" name="submit_purchase">Seal the Acquisition</button>
     </form>
 </div>
 
 {% elif purchase_id %}
 <div class="wizard-step">
     <div class="success-banner">
-        <p>✓ Purchase record saved successfully.</p>
+        <p>✓ Acquisition sealed in the ledger.</p>
         <p>Generated ID: <strong>{{ purchase_id }}</strong></p>
     </div>
     <div class="wizard-done">
-        <p>All three records saved!</p>
+        <p>The tale has been fully chronicled.</p>
         <div class="wizard-done-actions">
-            <a href="{{ url_for('media.add_media') }}" class="wizard-next-btn">Add Another</a>
-            <a href="{{ url_for('home.home') }}" class="wizard-next-btn wizard-next-btn--secondary">Back to Home</a>
+            <a href="{{ url_for('media.add_media') }}" class="wizard-next-btn">Chronicle Another</a>
+            <a href="{{ url_for('home.home') }}" class="wizard-next-btn wizard-next-btn--secondary">Return to the Storybook</a>
         </div>
     </div>
 </div>
@@ -321,8 +321,8 @@
         flex: 1;
         justify-content: center;
     }
-    .wizard-tab.active  { opacity: 1; border-color: var(--gold); background: var(--gold-dim); }
-    .wizard-tab.complete { opacity: 1; border-color: rgba(92,224,138,0.3); background: rgba(92,224,138,0.06); }
+    .wizard-tab.active  { opacity: 1; border-color: var(--sapphire); background: var(--sapphire-dim); }
+    .wizard-tab.complete { opacity: 1; border-color: rgba(74,201,148,0.3); background: rgba(74,201,148,0.06); }
     .wizard-tab.locked  { opacity: 0.25; cursor: not-allowed; }
     .wizard-tab-num {
         width: 26px; height: 26px;
@@ -333,8 +333,8 @@
         border: 1px solid var(--border-mid);
         flex-shrink: 0;
     }
-    .wizard-tab.active .wizard-tab-num  { background: var(--gold); color: #0a0a0c; border-color: var(--gold); }
-    .wizard-tab.complete .wizard-tab-num { background: var(--green); color: #0a0a0c; border-color: var(--green); }
+    .wizard-tab.active .wizard-tab-num  { background: linear-gradient(135deg, var(--gold), var(--sapphire)); color: #070b14; border: none; }
+    .wizard-tab.complete .wizard-tab-num { background: var(--green); color: #070b14; border-color: var(--green); }
     .wizard-tab-label { font-size: 0.82rem; font-weight: 500; }
     .wizard-divider { height: 1px; width: 24px; background: var(--border); flex-shrink: 0; }
 
@@ -468,7 +468,7 @@
     .dup-card-actions { margin-top: 12px; display: flex; gap: 8px; }
     .btn-use-existing {
         background: var(--gold);
-        color: #0a0a0c;
+        color: #070b14;
         border: none;
         border-radius: var(--radius-sm);
         font-family: 'DM Sans', sans-serif;
@@ -499,7 +499,7 @@
         text-decoration: none;
         transition: all var(--transition);
     }
-    .wizard-next-btn:hover { background: var(--gold-light); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(201,168,76,0.25); }
+    .wizard-next-btn:hover { background: var(--gold-light); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(212,168,67,0.3); }
     .wizard-next-btn--secondary {
         background: transparent;
         border: 1px solid var(--border-mid);
@@ -565,7 +565,7 @@
                 <div class="dup-card-actions">
                     <a class="btn-use-existing"
                        href="/add_media?new_id=${m.id}">
-                       Yes — Use This Title (ID ${m.id})
+                       Yes — Use This Tale (ID ${m.id})
                     </a>
                 </div>
             </div>
@@ -622,7 +622,7 @@
                 document.getElementById('titleHint').textContent = 'TMDB search failed.';
             } finally {
                 tmdbBtn.disabled    = false;
-                tmdbBtn.textContent = 'Search TMDB';
+                tmdbBtn.textContent = 'Seek in TMDB';
             }
         });
     }
@@ -690,7 +690,7 @@
             }
         } catch (e) { console.warn('Genre lookup failed', e); }
 
-        document.getElementById('titleHint').textContent = `✓ Filled from TMDB (ID ${tmdbId})`;
+        document.getElementById('titleHint').textContent = `✓ Tale found (ID ${tmdbId})`;
     }
 
     // ── Init ────────────────────────────────────────────────

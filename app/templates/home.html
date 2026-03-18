@@ -4,18 +4,12 @@
 {% block content %}
 
 <div class="hero-section">
-    <div class="hero-media-wrapper">
-        <img src="{{ url_for('static', filename='img/jeremy-yap-J39X2xX_8CQ-unsplash.jpg') }}"
-             alt="Cinema"
-             class="hero-image">
-    </div>
-
     <div class="search-overlay">
-        <h1>Media Catalog Dashboard</h1>
+        <h1>The Storybook</h1>
         {{ search_form() }}
         <p>
             <a class="link-btn" href="{{ url_for('search.search') }}">
-                Advanced: Search by location
+                Seek by location →
             </a>
         </p>
     </div>
@@ -24,7 +18,7 @@
 <!-- Poster Strip -->
 {% if posters %}
 <section class="poster-strip-section">
-    <h3 class="poster-strip-label">From Your Collection</h3>
+    <h3 class="poster-strip-label">Tales in the Collection</h3>
     <div class="poster-track-wrapper">
         <div class="poster-track" id="posterTrack">
             <!-- Rendered twice for seamless infinite loop -->
@@ -37,7 +31,7 @@
                data-title="{{ item.title }}">
                 <div class="poster-img-wrap">
                     <img class="poster-img" src="" alt="{{ item.title }}" loading="lazy">
-                    <div class="poster-placeholder">🎬</div>
+                    <div class="poster-placeholder">📜</div>
                 </div>
                 <span class="poster-title">{{ item.title }}</span>
             </a>
@@ -52,7 +46,7 @@
                data-title="{{ item.title }}">
                 <div class="poster-img-wrap">
                     <img class="poster-img" src="" alt="{{ item.title }}" loading="lazy">
-                    <div class="poster-placeholder">🎬</div>
+                    <div class="poster-placeholder">📜</div>
                 </div>
                 <span class="poster-title">{{ item.title }}</span>
             </a>
@@ -151,7 +145,11 @@
         transition: color 200ms ease;
     }
     .poster-card:hover .poster-title {
-        color: var(--gold);
+        color: var(--sapphire);
+    }
+    .poster-card:hover .poster-img-wrap {
+        box-shadow: 0 0 20px rgba(74,127,212,0.25), 0 0 8px rgba(212,168,67,0.1);
+        border-color: rgba(74,127,212,0.3);
     }
 </style>
 
@@ -229,15 +227,15 @@ wrapper.addEventListener('mousemove', e => {
 </script>
 
 <!-- Recently Added -->
-<h3>Recently Added DVDs</h3>
+<h3>Newly Chronicled Tales</h3>
 <table>
     <thead>
         <tr>
-            <th>Title</th>
-            <th>Sub Title</th>
-            <th>Type</th>
-            <th>Disk</th>
-            <th>Purchase Date</th>
+            <th>Tale</th>
+            <th>Volume</th>
+            <th>Form</th>
+            <th>Format</th>
+            <th>Date Acquired</th>
         </tr>
     </thead>
     <tbody>
@@ -262,15 +260,15 @@ wrapper.addEventListener('mousemove', e => {
 </table>
 
 <!-- Library Overview -->
-<h1>Library Overview</h1>
+<h1>The Grand Chronicle</h1>
 <div class="top-stats">
     <div class="stat-card">
-        <h4>Total Collection</h4>
+        <h4>Tales Collected</h4>
         <div class="stat-value">{{ "{:,}".format(counts[0].count) }}</div>
     </div>
 
     <div class="stat-card">
-        <h4>Media Types</h4>
+        <h4>Forms of Story</h4>
         <ul class="stat-list">
             {% for item in types %}
                 <li><span>{{ item.type }}</span> <strong>{{ item.count }}</strong></li>
@@ -280,7 +278,7 @@ wrapper.addEventListener('mousemove', e => {
 </div>
 
 <!-- Insights Carousel -->
-<h2 class="carousel-hint">More Insights (Swipe →)</h2>
+<h2 class="carousel-hint">Deeper Lore (Swipe →)</h2>
 <div class="stat-carousel">
 
     <div class="carousel-card">
@@ -293,21 +291,21 @@ wrapper.addEventListener('mousemove', e => {
     </div>
 
     <div class="carousel-card">
-        <h4>Cost Analysis</h4>
+        <h4>Treasury Ledger</h4>
         <ul class="stat-list">
             {% for item in costs %}
                 <li><span>{{ item.type }}</span> <strong>${{ "{:,.2f}".format(item.sum) }}</strong></li>
             {% endfor %}
         </ul>
 
-        <h4>Cost by Disk Type</h4>
+        <h4>By Format</h4>
         <ul class="stat-list">
             {% for item in cost_disks %}
                 <li><span>{{ item.disk_type }}</span> <strong>${{ "{:,.2f}".format(item.sum) }}</strong></li>
             {% endfor %}
         </ul>
 
-        <h4>Cost by Store</h4>
+        <h4>By Merchant</h4>
         <ul class="stat-list">
             {% for item in cost_stores %}
                 <li><span>{{ item.store }}</span> <strong>${{ "{:,.2f}".format(item.sum) }}</strong></li>
