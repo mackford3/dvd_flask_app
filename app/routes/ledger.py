@@ -40,7 +40,7 @@ def _build_collection_sql(name: str, game: str, status: str) -> tuple:
     params = {}
 
     if name:
-        sql += " AND name ILIKE :name"
+        sql += " AND (name ILIKE :name OR set_code ILIKE :name OR collector_number ILIKE :name)"
         params['name'] = f"%{name}%"
     if game:
         sql += " AND game = :game"

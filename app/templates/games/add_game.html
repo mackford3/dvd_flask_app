@@ -1,0 +1,514 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<header>
+    <h1>Add a Game</h1>
+</header>
+
+<!-- Step Tabs -->
+<div class="wizard-tabs">
+    <div class="wizard-tab {% if not title_id %}active{% endif %} {% if title_id %}complete{% endif %}" data-step="1">
+        <span class="wizard-tab-num">{% if title_id %}✓{% else %}1{% endif %}</span>
+        <span class="wizard-tab-label">The Game</span>
+    </div>
+    <div class="wizard-divider"></div>
+    <div class="wizard-tab {% if title_id and not copy_id %}active{% endif %} {% if copy_id %}complete{% endif %} {% if not title_id %}locked{% endif %}" data-step="2">
+        <span class="wizard-tab-num">{% if copy_id %}✓{% else %}2{% endif %}</span>
+        <span class="wizard-tab-label">The Copy</span>
+    </div>
+    <div class="wizard-divider"></div>
+    <div class="wizard-tab {% if copy_id and not purchase_id %}active{% endif %} {% if purchase_id %}complete{% endif %} {% if not copy_id %}locked{% endif %}" data-step="3">
+        <span class="wizard-tab-num">{% if purchase_id %}✓{% else %}3{% endif %}</span>
+        <span class="wizard-tab-label">Acquisition</span>
+    </div>
+</div>
+
+<!-- ── Step 1: Game Info ──────────────────────────────────── -->
+{% if not title_id %}
+<div class="wizard-step">
+    <form method="post" id="gameForm">
+        <fieldset>
+            <legend>Game Information</legend>
+
+            <div class="form-group">
+                <label for="title">Title</label>
+                <div class="input-action-row">
+                    <input type="text" name="title" id="title" required autocomplete="off">
+                    <button type="button" class="btn-secondary" id="rawgSearchBtn">
+                        Seek in RAWG
+                    </button>
+                </div>
+                <span class="field-hint" id="titleHint"></span>
+            </div>
+
+            <div id="rawgResults" class="tmdb-results" style="display:none"></div>
+
+            <div class="form-group">
+                <label for="franchise">Franchise / Series</label>
+                <input type="text" name="franchise" id="franchise" placeholder="e.g. The Legend of Zelda">
+            </div>
+
+            <div class="form-group">
+                <label for="genre">Genre</label>
+                <input type="text" name="genre" id="genre" list="genreList" placeholder="Type or select...">
+                <datalist id="genreList"></datalist>
+            </div>
+
+            <div class="form-group">
+                <label for="developer">Developer</label>
+                <input type="text" name="developer" id="developer">
+            </div>
+
+            <div class="form-group">
+                <label for="publisher">Publisher</label>
+                <input type="text" name="publisher" id="publisher">
+            </div>
+
+            <div class="form-group">
+                <label for="release_year">Release Year</label>
+                <input type="number" step="1" name="release_year" id="release_year" placeholder="2022">
+            </div>
+
+            <div class="form-group">
+                <label for="complete_collection">Complete Collection?</label>
+                <input type="checkbox" name="complete_collection" id="complete_collection">
+            </div>
+
+            <div class="form-group">
+                <label for="rawg_id">RAWG ID</label>
+                <input type="text" name="rawg_id" id="rawg_id">
+            </div>
+        </fieldset>
+
+        <button type="submit" name="submit_title">Begin</button>
+    </form>
+</div>
+
+<!-- ── Duplicate Check Modal ──────────────────────────────── -->
+<div id="dupModal" class="modal-backdrop" style="display:none">
+    <div class="modal">
+        <h2>A Similar Game Exists</h2>
+        <p class="modal-subtitle">We found games that match this title. Is this the same one?</p>
+        <div id="dupList" class="dup-list"></div>
+        <div class="modal-actions">
+            <button type="button" class="btn-secondary" id="dupDismiss">
+                No — Add as New
+            </button>
+        </div>
+    </div>
+</div>
+
+{% elif title_id and not copy_id %}
+<div class="wizard-step">
+    <div class="success-banner">
+        <p>✓ The game has been recorded.</p>
+        <p>Generated ID: <strong>{{ title_id }}</strong></p>
+    </div>
+    <a href="{{ url_for('games.add_game', new_id=title_id) }}" class="wizard-next-btn">
+        Next: The Copy →
+    </a>
+</div>
+{% endif %}
+
+<!-- ── Step 2: Copy Details ───────────────────────────────── -->
+{% if title_id and not copy_id %}
+<div class="wizard-step" style="margin-top: 20px;">
+    <form method="post">
+        <fieldset>
+            <legend>Copy Details</legend>
+
+            <div class="form-group">
+                <label for="game_title_id">Game Title ID</label>
+                <input type="number" step="1" name="game_title_id" id="game_title_id"
+                       value="{{ title_id }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="platform">Platform</label>
+                <input type="text" name="platform" id="platform" list="platformList" required
+                       placeholder="PS5, Switch, PS2, PC...">
+                <datalist id="platformList">
+                    <option value="PS5"><option value="PS4"><option value="PS3"><option value="PS2"><option value="PS1">
+                    <option value="Switch"><option value="Wii U"><option value="Wii"><option value="GameCube"><option value="N64"><option value="SNES"><option value="NES">
+                    <option value="Xbox Series X"><option value="Xbox One"><option value="Xbox 360"><option value="Xbox">
+                    <option value="PC"><option value="Steam Deck"><option value="3DS"><option value="DS"><option value="Game Boy Advance"><option value="PSP"><option value="Vita">
+                </datalist>
+            </div>
+
+            <div class="form-group">
+                <label for="edition">Edition</label>
+                <input type="text" name="edition" id="edition" list="editionList"
+                       placeholder="Standard, Collector's, GOTY...">
+                <datalist id="editionList">
+                    <option value="Standard"><option value="Collector's Edition"><option value="Game of the Year">
+                    <option value="Steelbook"><option value="Limited Edition"><option value="Deluxe Edition">
+                </datalist>
+            </div>
+
+            <div class="form-group">
+                <label for="region">Region</label>
+                <select name="region" id="region">
+                    <option value="" disabled selected>Select region...</option>
+                    <option value="NTSC-U">NTSC-U (North America)</option>
+                    <option value="PAL">PAL (Europe)</option>
+                    <option value="NTSC-J">NTSC-J (Japan)</option>
+                    <option value="Region Free">Region Free</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="condition">Condition</label>
+                <select name="condition" id="condition">
+                    <option value="" disabled selected>Select condition...</option>
+                    <option value="Sealed">Sealed</option>
+                    <option value="CIB">CIB (Complete in Box)</option>
+                    <option value="Loose">Loose (Disc/Cart only)</option>
+                    <option value="Digital">Digital</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="location_label">Storage Location</label>
+                <input type="text" name="location_label" id="location_label">
+            </div>
+
+            <div class="form-group">
+                <label for="notes">Notes</label>
+                <input type="text" name="notes" id="notes">
+            </div>
+        </fieldset>
+
+        <button type="submit" name="submit_copy">Record the Copy</button>
+    </form>
+</div>
+
+{% elif copy_id and not purchase_id %}
+<div class="wizard-step">
+    <div class="success-banner">
+        <p>✓ Copy has been recorded.</p>
+        <p>Generated ID: <strong>{{ copy_id }}</strong></p>
+    </div>
+    <a href="{{ url_for('games.add_game', new_id=title_id, copy_id=copy_id) }}" class="wizard-next-btn">
+        Next: Acquisition →
+    </a>
+</div>
+{% endif %}
+
+<!-- ── Step 3: Purchase Info ──────────────────────────────── -->
+{% if copy_id and not purchase_id %}
+<div class="wizard-step" style="margin-top: 20px;">
+    <form method="post">
+        <fieldset>
+            <legend>Acquisition Record</legend>
+
+            <div class="form-group">
+                <label for="game_copy_id">Game Copy ID</label>
+                <input type="number" step="1" name="game_copy_id" id="game_copy_id"
+                       value="{{ copy_id }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="purchase_date">Purchase Date</label>
+                <input type="date" name="purchase_date" id="purchase_date" required>
+            </div>
+
+            <div class="form-group">
+                <label for="cost">Price Paid</label>
+                <input type="number" step="0.01" name="cost" id="cost" required>
+            </div>
+
+            <div class="form-group">
+                <label for="store">Merchant</label>
+                <input type="text" name="store" id="store">
+            </div>
+
+            <div class="form-group">
+                <label for="condition">Condition</label>
+                <select name="condition" id="condition">
+                    <option value="New">New</option>
+                    <option value="Used">Used</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">Notes</label>
+                <input type="text" name="notes" id="notes">
+            </div>
+        </fieldset>
+
+        <button type="submit" name="submit_purchase">Seal the Acquisition</button>
+    </form>
+</div>
+
+{% elif purchase_id %}
+<div class="wizard-step">
+    <div class="success-banner">
+        <p>✓ Acquisition sealed in the ledger.</p>
+        <p>Generated ID: <strong>{{ purchase_id }}</strong></p>
+    </div>
+    <div class="wizard-done">
+        <p>The game has been fully catalogued.</p>
+        <div class="wizard-done-actions">
+            <a href="{{ url_for('games.add_game') }}" class="wizard-next-btn">Add Another</a>
+            <a href="{{ url_for('games.home') }}" class="wizard-next-btn wizard-next-btn--secondary">Return to the Arcade</a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ── Styles (shared with the catalog wizard) ────────────── -->
+<style>
+    .wizard-tabs { display: flex; align-items: center; margin-bottom: 32px; }
+    .wizard-tab {
+        display: flex; align-items: center; gap: 10px; padding: 10px 16px;
+        border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg-card);
+        opacity: 0.4; transition: all var(--transition); flex: 1; justify-content: center;
+    }
+    .wizard-tab.active   { opacity: 1; border-color: var(--sapphire); background: var(--sapphire-dim); }
+    .wizard-tab.complete { opacity: 1; border-color: rgba(74,201,148,0.3); background: rgba(74,201,148,0.06); }
+    .wizard-tab.locked   { opacity: 0.25; cursor: not-allowed; }
+    .wizard-tab-num {
+        width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center;
+        justify-content: center; font-size: 0.78rem; font-weight: 700; background: var(--bg-raised);
+        border: 1px solid var(--border-mid); flex-shrink: 0;
+    }
+    .wizard-tab.active .wizard-tab-num   { background: linear-gradient(135deg, var(--gold), var(--sapphire)); color: #070b14; border: none; }
+    .wizard-tab.complete .wizard-tab-num { background: var(--green); color: #070b14; border-color: var(--green); }
+    .wizard-tab-label { font-size: 0.82rem; font-weight: 500; }
+    .wizard-divider { height: 1px; width: 24px; background: var(--border); flex-shrink: 0; }
+
+    .wizard-step { max-width: 560px; animation: fadeUp 250ms ease both; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    .input-action-row { display: flex; gap: 8px; align-items: stretch; }
+    .input-action-row input { flex: 1; }
+    .btn-secondary {
+        background: transparent; border: 1px solid var(--border-mid); border-radius: var(--radius-sm);
+        color: var(--text-mid); font-family: 'DM Sans', sans-serif; font-size: 0.82rem;
+        font-weight: 600; padding: 9px 14px; cursor: pointer; white-space: nowrap;
+        transition: all var(--transition); flex-shrink: 0;
+    }
+    .btn-secondary:hover { border-color: var(--gold); color: var(--gold); }
+    .btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
+    .field-hint { font-size: 0.75rem; color: var(--text-dim); margin-top: 2px; }
+
+    .tmdb-results {
+        background: var(--bg-card); border: 1px solid var(--border-mid); border-radius: var(--radius);
+        overflow: hidden; margin-top: -8px; margin-bottom: 14px;
+    }
+    .tmdb-result-item {
+        display: flex; align-items: center; gap: 12px; padding: 12px 14px; cursor: pointer;
+        border-bottom: 1px solid var(--border); transition: background var(--transition);
+    }
+    .tmdb-result-item:last-child { border-bottom: none; }
+    .tmdb-result-item:hover { background: var(--bg-raised); }
+    .tmdb-result-poster {
+        width: 54px; height: 36px; border-radius: 4px; object-fit: cover;
+        background: var(--bg-raised); flex-shrink: 0;
+    }
+    .tmdb-result-info { flex: 1; min-width: 0; }
+    .tmdb-result-title { font-size: 0.9rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tmdb-result-meta { font-size: 0.75rem; color: var(--text-dim); margin-top: 2px; }
+    .tmdb-result-select { font-size: 0.72rem; color: var(--gold); font-weight: 600; flex-shrink: 0; }
+
+    .modal-backdrop {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+        z-index: 200; display: flex; align-items: center; justify-content: center;
+        padding: 20px; animation: fadeIn 150ms ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal {
+        background: var(--bg-card); border: 1px solid var(--border-mid); border-radius: var(--radius-lg);
+        padding: 28px; max-width: 500px; width: 100%; animation: slideUp 200ms ease;
+    }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal h2 { font-size: 1.2rem; margin-bottom: 6px; }
+    .modal-subtitle { font-size: 0.85rem; color: var(--text-dim); margin-bottom: 20px; }
+    .dup-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+    .dup-card { background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+    .dup-card-title { font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .dup-card-meta  { font-size: 0.8rem; color: var(--text-dim); display: flex; flex-wrap: wrap; gap: 12px; }
+    .dup-card-meta span { display: flex; gap: 4px; }
+    .dup-card-meta strong { color: var(--text-mid); }
+    .dup-card-actions { margin-top: 12px; display: flex; gap: 8px; }
+    .btn-use-existing {
+        background: var(--gold); color: #070b14; border: none; border-radius: var(--radius-sm);
+        font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 700; padding: 8px 14px;
+        cursor: pointer; text-decoration: none; transition: all var(--transition);
+    }
+    .btn-use-existing:hover { background: var(--gold-light); }
+    .modal-actions { border-top: 1px solid var(--border); padding-top: 16px; }
+
+    .wizard-next-btn {
+        display: inline-block; margin-top: 16px; background: var(--gold); color: #0a0a0c;
+        border: none; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif;
+        font-size: 0.88rem; font-weight: 700; letter-spacing: 0.05em; padding: 11px 24px;
+        cursor: pointer; text-decoration: none; transition: all var(--transition);
+    }
+    .wizard-next-btn:hover { background: var(--gold-light); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(212,168,67,0.3); }
+    .wizard-next-btn--secondary { background: transparent; border: 1px solid var(--border-mid); color: var(--text-mid); margin-left: 10px; }
+    .wizard-next-btn--secondary:hover { background: var(--bg-raised); box-shadow: none; color: var(--text); }
+    .wizard-done { margin-top: 20px; }
+    .wizard-done p { margin-bottom: 14px; }
+    .wizard-done-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    @media (max-width: 500px) {
+        .wizard-tab-label { display: none; }
+        .wizard-tab { flex: 0 0 auto; padding: 10px 12px; }
+        .wizard-divider { flex: 1; }
+        .input-action-row { flex-wrap: wrap; }
+    }
+</style>
+
+<!-- ── JavaScript ─────────────────────────────────────────── -->
+<script>
+(function () {
+    const RAWG_KEY = "{{ rawg_api_key or '' }}";
+
+    // ── Load existing genres into datalist ──────────────────
+    async function loadGenres() {
+        try {
+            const res  = await fetch('/api/game_genres');
+            const list = await res.json();
+            const dl   = document.getElementById('genreList');
+            if (!dl) return;
+            dl.innerHTML = list.map(g => `<option value="${g}">`).join('');
+        } catch (e) { console.warn('Genre load failed', e); }
+    }
+
+    // ── Duplicate check on title blur ───────────────────────
+    const titleInput = document.getElementById('title');
+    if (titleInput) {
+        titleInput.addEventListener('blur', async () => {
+            const name = titleInput.value.trim();
+            if (!name) return;
+            try {
+                const res     = await fetch(`/api/check_game?name=${encodeURIComponent(name)}`);
+                const matches = await res.json();
+                if (matches.length > 0) showDupModal(matches);
+            } catch (e) { console.warn('Duplicate check failed', e); }
+        });
+    }
+
+    function showDupModal(matches) {
+        const modal   = document.getElementById('dupModal');
+        const dupList = document.getElementById('dupList');
+        dupList.innerHTML = matches.map(m => `
+            <div class="dup-card">
+                <div class="dup-card-title">${m.title}</div>
+                <div class="dup-card-meta">
+                    <span><strong>Franchise:</strong> ${m.franchise || '—'}</span>
+                    <span><strong>Genre:</strong> ${m.genre || '—'}</span>
+                    <span><strong>Copies owned:</strong> ${m.copy_count}</span>
+                </div>
+                <div class="dup-card-actions">
+                    <a class="btn-use-existing" href="/games/add_game?new_id=${m.id}">
+                       Yes — Use This Game (ID ${m.id})
+                    </a>
+                </div>
+            </div>
+        `).join('');
+        modal.style.display = 'flex';
+    }
+
+    const dismiss = document.getElementById('dupDismiss');
+    if (dismiss) {
+        dismiss.addEventListener('click', () => {
+            document.getElementById('dupModal').style.display = 'none';
+        });
+    }
+    const backdrop = document.getElementById('dupModal');
+    if (backdrop) {
+        backdrop.addEventListener('click', e => {
+            if (e.target === backdrop) backdrop.style.display = 'none';
+        });
+    }
+
+    // ── RAWG Search ─────────────────────────────────────────
+    const rawgBtn     = document.getElementById('rawgSearchBtn');
+    const rawgResults = document.getElementById('rawgResults');
+
+    if (rawgBtn) {
+        rawgBtn.addEventListener('click', async () => {
+            const query = document.getElementById('title').value.trim();
+            const hint  = document.getElementById('titleHint');
+            if (!query) { hint.textContent = 'Enter a title first.'; return; }
+            if (!RAWG_KEY) { hint.textContent = 'RAWG_API_KEY is not configured.'; return; }
+
+            rawgBtn.disabled = true; rawgBtn.textContent = 'Searching…'; hint.textContent = '';
+            try {
+                const res  = await fetch(
+                    `https://api.rawg.io/api/games?key=${RAWG_KEY}&search=${encodeURIComponent(query)}&page_size=5`
+                );
+                const data = await res.json();
+                const hits = (data.results || []).slice(0, 5);
+                if (hits.length === 0) {
+                    rawgResults.style.display = 'none';
+                    hint.textContent = 'No RAWG results found.';
+                } else {
+                    renderRawgResults(hits);
+                }
+            } catch (e) {
+                hint.textContent = 'RAWG search failed.';
+            } finally {
+                rawgBtn.disabled = false; rawgBtn.textContent = 'Seek in RAWG';
+            }
+        });
+    }
+
+    function renderRawgResults(hits) {
+        rawgResults.style.display = 'block';
+        rawgResults.innerHTML = hits.map(h => {
+            const name  = h.name || '';
+            const year  = (h.released || '').slice(0, 4);
+            const genre = (h.genres && h.genres[0]) ? h.genres[0].name : '';
+            const cover = h.background_image || '';
+            return `
+                <div class="tmdb-result-item"
+                     data-id="${h.id}"
+                     data-title="${name.replace(/"/g, '&quot;')}"
+                     data-year="${year}"
+                     data-genre="${genre.replace(/"/g, '&quot;')}">
+                    ${cover
+                        ? `<img class="tmdb-result-poster" src="${cover}" alt="${name}">`
+                        : `<div class="tmdb-result-poster"></div>`}
+                    <div class="tmdb-result-info">
+                        <div class="tmdb-result-title">${name}</div>
+                        <div class="tmdb-result-meta">${genre || 'Game'}${year ? ' · ' + year : ''}</div>
+                    </div>
+                    <span class="tmdb-result-select">Select ↗</span>
+                </div>`;
+        }).join('');
+
+        rawgResults.querySelectorAll('.tmdb-result-item').forEach(item => {
+            item.addEventListener('click', () => selectRawgResult(item));
+        });
+    }
+
+    async function selectRawgResult(item) {
+        const rawgId = item.dataset.id;
+        document.getElementById('title').value   = item.dataset.title;
+        document.getElementById('rawg_id').value = rawgId;
+        if (item.dataset.genre) document.getElementById('genre').value = item.dataset.genre;
+        if (item.dataset.year)  document.getElementById('release_year').value = item.dataset.year;
+        rawgResults.style.display = 'none';
+
+        // Fetch detail for developer / publisher (not in the search list payload).
+        try {
+            const res  = await fetch(`https://api.rawg.io/api/games/${rawgId}?key=${RAWG_KEY}`);
+            const data = await res.json();
+            if (data.developers && data.developers[0])
+                document.getElementById('developer').value = data.developers[0].name;
+            if (data.publishers && data.publishers[0])
+                document.getElementById('publisher').value = data.publishers[0].name;
+        } catch (e) { console.warn('RAWG detail lookup failed', e); }
+
+        document.getElementById('titleHint').textContent = `✓ Game found (RAWG ID ${rawgId})`;
+    }
+
+    loadGenres();
+})();
+</script>
+
+{% endblock %}

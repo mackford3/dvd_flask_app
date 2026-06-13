@@ -15,6 +15,9 @@ class Config:
     # Card ledger lives in the same DB under its own schema.
     LEDGER_SCHEMA = os.getenv('LEDGER_SCHEMA', 'card_ledger')
 
+    # Video game catalog lives in the same DB under its own schema.
+    GAMES_SCHEMA = os.getenv('GAMES_SCHEMA', 'games')
+
     SQLALCHEMY_DATABASE_URI = (
         f'postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}'
     )

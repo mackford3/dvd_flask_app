@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<header>
+    <h1>Seek a Game</h1>
+</header>
+
+<section class="search-container">
+    <form action="{{ url_for('games.search') }}" method="GET">
+        <input type="text" name="name" placeholder="Seek a game by name...">
+        <input type="text" name="location" placeholder="Search by location...">
+        <button type="submit">Seek</button>
+        <a href="{{ url_for('games.search') }}">
+            <button type="button">Clear</button>
+        </a>
+    </form>
+</section>
+
+<h3>Games Found</h3>
+
+<table>
+    <thead>
+        <tr>
+            <th>Game</th>
+            <th>Franchise</th>
+            <th>Platform</th>
+            <th>Edition</th>
+            <th>Condition</th>
+            <th>Stored At</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for g in search_games %}
+        <tr>
+            <td>
+                <a href="{{ url_for('games.detail', title_id=g['game_title_id']) }}" class="movie-link">
+                    <strong>{{ g['title'] }}</strong>
+                    <span class="hover-tip">View Details ↗</span>
+                </a>
+            </td>
+            <td>{{ g['franchise'] or '—' }}</td>
+            <td>{{ g['platform'] }}</td>
+            <td>{{ g['edition'] or '—' }}</td>
+            <td>{{ g['copy_condition'] or '—' }}</td>
+            <td>{{ g['location_label'] or '—' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

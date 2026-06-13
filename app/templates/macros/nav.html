@@ -1,7 +1,9 @@
-{# Context-aware bottom nav: DVD-catalog actions on catalog pages, card-ledger
-   actions on ledger pages. The last item in each set crosses to the other world. #}
+{# Context-aware bottom nav. Three worlds — DVD catalog, card ledger, game
+   catalog — each with its own actions. The last item in each set crosses to
+   the next world, forming a cycle: Catalog → Cards → Games → Catalog. #}
 {% macro bottom_nav() %}
 {% set in_ledger = (request.blueprint == 'ledger') %}
+{% set in_games  = (request.blueprint == 'games') %}
 <nav class="bottom-nav">
 {% if in_ledger %}
     <a href="{{ url_for('ledger.home') }}" class="nav-item {% if request.endpoint == 'ledger.home' %}active{% endif %}">
@@ -15,6 +17,23 @@
     <a href="{{ url_for('ledger.import_csv') }}" class="nav-item {% if request.endpoint == 'ledger.import_csv' %}active{% endif %}">
         <span class="nav-icon">⬆</span>
         <span>Import</span>
+    </a>
+    <a href="{{ url_for('games.home') }}" class="nav-item">
+        <span class="nav-icon">🎮</span>
+        <span>Games →</span>
+    </a>
+{% elif in_games %}
+    <a href="{{ url_for('games.home') }}" class="nav-item {% if request.endpoint == 'games.home' %}active{% endif %}">
+        <span class="nav-icon">🎮</span>
+        <span>Arcade</span>
+    </a>
+    <a href="{{ url_for('games.add_game') }}" class="nav-item {% if request.endpoint == 'games.add_game' %}active{% endif %}">
+        <span class="nav-icon">✦</span>
+        <span>Add Game</span>
+    </a>
+    <a href="{{ url_for('games.search') }}" class="nav-item {% if request.endpoint == 'games.search' %}active{% endif %}">
+        <span class="nav-icon">✧</span>
+        <span>Seek</span>
     </a>
     <a href="{{ url_for('home.home') }}" class="nav-item">
         <span class="nav-icon">🏛</span>

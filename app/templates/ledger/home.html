@@ -2,9 +2,29 @@
 
 {% block content %}
 
-<header>
-    <h1>Card Ledger</h1>
-</header>
+<div class="hero-section">
+    <div class="search-overlay">
+        <h1>Card Ledger</h1>
+        <section class="search-container">
+            <form action="{{ url_for('ledger.collection') }}" method="GET">
+                <input type="text" name="name" placeholder="Seek a card by name...">
+                <button type="submit">Seek</button>
+                <a href="{{ url_for('ledger.collection') }}">
+                    <button type="button">Clear</button>
+                </a>
+            </form>
+        </section>
+        <p>
+            <a class="link-btn" href="{{ url_for('ledger.collection') }}">
+                Browse the collection →
+            </a>
+            &nbsp;·&nbsp;
+            <a class="link-btn" href="{{ url_for('locate.locate', type='cards') }}">
+                Locate by shelf →
+            </a>
+        </p>
+    </div>
+</div>
 
 <!-- Portfolio totals (read straight from v_portfolio) -->
 <div class="top-stats">
