@@ -12,6 +12,9 @@ class Config:
     DB_NAME   = os.getenv('DB_NAME')
     DB_SCHEMA = os.getenv('DB_SCHEMA')
 
+    # Card ledger lives in the same DB under its own schema.
+    LEDGER_SCHEMA = os.getenv('LEDGER_SCHEMA', 'card_ledger')
+
     SQLALCHEMY_DATABASE_URI = (
         f'postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}'
     )

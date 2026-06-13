@@ -1,0 +1,197 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<header>
+    <h1>The Collection</h1>
+</header>
+
+<!-- Filters: name (ILIKE), game, status -->
+<section class="search-container">
+    <form action="{{ url_for('ledger.collection') }}" method="GET">
+        <input type="text" name="name" value="{{ name_query }}" placeholder="Search by card name...">
+        <select name="game" class="filter-select">
+            <option value="">All games</option>
+            {% for g in games %}
+            <option value="{{ g.game }}" {{ 'selected' if g.game == game_query }}>{{ g.game }}</option>
+            {% endfor %}
+        </select>
+        <select name="status" class="filter-select">
+            <option value="">All statuses</option>
+            {% for s in statuses %}
+            <option value="{{ s.status }}" {{ 'selected' if s.status == status_query }}>{{ s.status }}</option>
+            {% endfor %}
+        </select>
+        <input type="hidden" name="view" value="{{ view }}">
+        <button type="submit">Filter</button>
+        <a href="{{ url_for('ledger.collection', view=view) }}"><button type="button">Clear</button></a>
+    </form>
+</section>
+
+<!-- View toggle (preserves active filters) -->
+<div class="view-toggle">
+    <span class="result-count">{{ cards|length }} card{{ '' if cards|length == 1 else 's' }}</span>
+    <div class="toggle-buttons">
+        <a href="{{ url_for('ledger.collection', name=name_query, game=game_query, status=status_query, view='grid') }}"
+           class="toggle-btn {{ 'active' if view == 'grid' }}">▦ Grid</a>
+        <a href="{{ url_for('ledger.collection', name=name_query, game=game_query, status=status_query, view='table') }}"
+           class="toggle-btn {{ 'active' if view == 'table' }}">≣ Table</a>
+    </div>
+</div>
+
+{% if not cards %}
+<p class="empty-note">No cards match. Try clearing the filters or importing an export.</p>
+
+{% elif view == 'grid' %}
+<div class="card-grid">
+    {% for c in cards %}
+    <a class="grid-card" href="{{ url_for('ledger.card_detail', item_id=c.item_id) }}">
+        <div class="grid-card-img">
+            {% if c.image_url %}
+            <img src="{{ c.image_url }}" alt="{{ c.name }}" loading="lazy">
+            {% else %}
+            <div class="grid-card-placeholder">🃏</div>
+            {% endif %}
+            <span class="status-badge status-{{ c.status }}">{{ c.status }}</span>
+        </div>
+        <div class="grid-card-body">
+            <span class="grid-card-name">{{ c.name }}</span>
+            <span class="grid-card-meta">{{ c.set_code or '' }}{% if c.condition %} · {{ c.condition }}{% endif %}</span>
+            <span class="grid-card-value">${{ "{:,.2f}".format(c.market_value or 0) }}</span>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+
+{% else %}
+<div class="table-scroll">
+<table>
+    <thead>
+        <tr>
+            <th>Card</th>
+            <th>Set</th>
+            <th>Game</th>
+            <th>Cond.</th>
+            <th>Basis</th>
+            <th>Market</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in cards %}
+        <tr>
+            <td class="title-cell">
+                <a href="{{ url_for('ledger.card_detail', item_id=c.item_id) }}" class="movie-link">
+                    <strong>{{ c.name }}</strong>
+                    <span class="hover-tip">View ↗</span>
+                </a>
+            </td>
+            <td>{% if c.set_code %}<code>{{ c.set_code }}</code>{% endif %}</td>
+            <td>{{ c.game }}</td>
+            <td>{{ c.condition or '—' }}</td>
+            <td>${{ "{:,.2f}".format(c.total_basis or 0) }}</td>
+            <td>${{ "{:,.2f}".format(c.market_value or 0) }}</td>
+            <td><span class="status-badge status-{{ c.status }}">{{ c.status }}</span></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endif %}
+
+<style>
+    .search-container .filter-select {
+        flex: 0 1 150px;
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: var(--radius-sm);
+        color: var(--text);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.9rem;
+        padding: 10px 14px;
+        outline: none;
+    }
+    .search-container .filter-select option { background: var(--bg-card); }
+
+    .view-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 20px 0 18px;
+    }
+    .result-count { font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; }
+    .toggle-buttons { display: flex; gap: 6px; }
+    .toggle-btn {
+        font-size: 0.8rem;
+        color: var(--text-mid);
+        text-decoration: none;
+        padding: 7px 14px;
+        border: 1px solid var(--border-mid);
+        border-radius: var(--radius-sm);
+        transition: all var(--transition);
+    }
+    .toggle-btn:hover { color: var(--text); border-color: var(--text-mid); }
+    .toggle-btn.active { color: #0a0a0c; background: var(--gold); border-color: var(--gold); font-weight: 600; }
+
+    .empty-note { color: var(--text-dim); padding: 24px 0; }
+
+    /* Grid view */
+    .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 16px;
+        margin-bottom: 32px;
+    }
+    .grid-card {
+        text-decoration: none;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        transition: all var(--transition);
+        display: flex;
+        flex-direction: column;
+    }
+    .grid-card:hover {
+        border-color: var(--border-mid);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 24px rgba(74,127,212,0.1);
+    }
+    .grid-card-img { position: relative; aspect-ratio: 5 / 7; background: var(--bg-raised); }
+    .grid-card-img img { width: 100%; height: 100%; object-fit: cover; }
+    .grid-card-placeholder {
+        position: absolute; inset: 0;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 2.4rem; color: var(--text-dim);
+    }
+    .grid-card-body { padding: 10px 12px 14px; display: flex; flex-direction: column; gap: 3px; }
+    .grid-card-name {
+        font-size: 0.82rem; font-weight: 500; color: var(--text);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .grid-card-meta { font-size: 0.72rem; color: var(--text-dim); }
+    .grid-card-value { font-size: 0.85rem; color: var(--gold); font-variant-numeric: tabular-nums; margin-top: 2px; }
+
+    /* Status badges */
+    .status-badge {
+        font-size: 0.66rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding: 3px 8px;
+        border-radius: 20px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .grid-card-img .status-badge {
+        position: absolute; top: 8px; right: 8px;
+        backdrop-filter: blur(8px);
+    }
+    .status-inventory { background: rgba(74,127,212,0.2);  color: var(--sapphire); }
+    .status-listed    { background: rgba(212,168,67,0.2);  color: var(--gold-light); }
+    .status-sold      { background: rgba(74,201,148,0.2);  color: var(--green); }
+    .status-keep      { background: rgba(200,216,240,0.15); color: var(--starlight); }
+    .status-grading   { background: rgba(201,74,106,0.18); color: var(--red); }
+    .status-lost      { background: rgba(61,80,112,0.3);   color: var(--text-dim); }
+</style>
+
+{% endblock %}

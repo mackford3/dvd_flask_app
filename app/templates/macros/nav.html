@@ -1,0 +1,42 @@
+{# Context-aware bottom nav: DVD-catalog actions on catalog pages, card-ledger
+   actions on ledger pages. The last item in each set crosses to the other world. #}
+{% macro bottom_nav() %}
+{% set in_ledger = (request.blueprint == 'ledger') %}
+<nav class="bottom-nav">
+{% if in_ledger %}
+    <a href="{{ url_for('ledger.home') }}" class="nav-item {% if request.endpoint == 'ledger.home' %}active{% endif %}">
+        <span class="nav-icon">🃏</span>
+        <span>Ledger</span>
+    </a>
+    <a href="{{ url_for('ledger.collection') }}" class="nav-item {% if request.endpoint == 'ledger.collection' %}active{% endif %}">
+        <span class="nav-icon">▦</span>
+        <span>Collection</span>
+    </a>
+    <a href="{{ url_for('ledger.import_csv') }}" class="nav-item {% if request.endpoint == 'ledger.import_csv' %}active{% endif %}">
+        <span class="nav-icon">⬆</span>
+        <span>Import</span>
+    </a>
+    <a href="{{ url_for('home.home') }}" class="nav-item">
+        <span class="nav-icon">🏛</span>
+        <span>Catalog →</span>
+    </a>
+{% else %}
+    <a href="{{ url_for('home.home') }}" class="nav-item {% if request.endpoint == 'home.home' %}active{% endif %}">
+        <span class="nav-icon">🏛</span>
+        <span>Chronicles</span>
+    </a>
+    <a href="{{ url_for('media.add_media') }}" class="nav-item {% if request.endpoint == 'media.add_media' %}active{% endif %}">
+        <span class="nav-icon">✦</span>
+        <span>New Tale</span>
+    </a>
+    <a href="{{ url_for('search.search') }}" class="nav-item {% if request.endpoint == 'search.search' %}active{% endif %}">
+        <span class="nav-icon">✧</span>
+        <span>Seek</span>
+    </a>
+    <a href="{{ url_for('ledger.home') }}" class="nav-item">
+        <span class="nav-icon">🃏</span>
+        <span>Cards →</span>
+    </a>
+{% endif %}
+</nav>
+{% endmacro %}

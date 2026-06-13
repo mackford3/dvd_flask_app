@@ -1,0 +1,255 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<header>
+    <h1>Add Cards</h1>
+</header>
+
+{% if error %}
+<div class="error-banner"><p>⚠ {{ error }}</p></div>
+{% endif %}
+
+<form action="{{ url_for('ledger.import_csv') }}" method="POST" enctype="multipart/form-data">
+
+    <fieldset>
+        <legend>Setup</legend>
+        <div class="form-group">
+            <label>What are you adding?</label>
+            <select name="mode" id="mode-select">
+                <option value="sealed"  {{ 'selected' if v.mode == 'sealed' }}>New sealed product (box / pack / bundle / bulk)</option>
+                <option value="singles" {{ 'selected' if v.mode == 'singles' }}>New singles (known price per card)</option>
+                <option value="append"  {{ 'selected' if v.mode == 'append' }}>Append to an existing box (more packs)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>How?</label>
+            <select name="intake" id="intake-select">
+                <option value="csv"    {{ 'selected' if v.intake == 'csv' }}>Upload a TCGplayer CSV</option>
+                <option value="manual" {{ 'selected' if v.intake == 'manual' }}>Type the cards by hand</option>
+            </select>
+        </div>
+    </fieldset>
+
+    <!-- ===== INTAKE: CSV ===== -->
+    <div class="intake-section" data-intake="csv">
+        <fieldset>
+            <legend>CSV</legend>
+            <div class="form-group">
+                <label>TCGplayer CSV</label>
+                <input type="file" name="csvfile" accept=".csv">
+            </div>
+        </fieldset>
+    </div>
+
+    <!-- ===== INTAKE: MANUAL ===== -->
+    <div class="intake-section" data-intake="manual">
+        <fieldset>
+            <legend>Cards</legend>
+            <p class="mode-note">Add a row per card. <strong>Leave the list empty</strong> to just
+               log the purchase (e.g. a sealed/unopened pack you'll open later).</p>
+            <div class="table-scroll">
+            <table class="manual-table">
+                <thead>
+                    <tr>
+                        <th>Name</th><th>Set</th><th>Number</th><th>Variant</th>
+                        <th>Cond.</th><th>Market</th><th>Paid</th><th>Qty</th><th></th>
+                    </tr>
+                </thead>
+                <tbody id="manual-rows"></tbody>
+            </table>
+            </div>
+            <button type="button" id="add-row" class="ghost-btn">+ Add row</button>
+        </fieldset>
+    </div>
+
+    <!-- ===== SEALED ===== -->
+    <div class="mode-section" data-mode="sealed">
+        <fieldset>
+            <legend>Acquisition</legend>
+            <div class="form-group"><label>Description</label>
+                <input type="text" name="description" value="{{ v.description }}" placeholder="Frieren Booster Box (WS, EN)"></div>
+            <div class="form-group"><label>Purchase Date</label>
+                <input type="date" name="purchase_date" value="{{ v.purchase_date }}"></div>
+            <div class="form-group"><label>Product Type</label>
+                <select name="product_type">
+                    {% for pt in product_types %}<option value="{{ pt }}" {{ 'selected' if pt == v.product_type }}>{{ pt }}</option>{% endfor %}
+                </select></div>
+            <div class="form-group"><label>Game</label>
+                <select name="game">{% for g in games %}<option value="{{ g }}" {{ 'selected' if g == v.game }}>{{ g }}</option>{% endfor %}</select></div>
+            <div class="form-group"><label>Language</label>
+                <input type="text" name="language" value="{{ v.language }}" placeholder="EN"></div>
+        </fieldset>
+        <fieldset>
+            <legend>Cost</legend>
+            <div class="form-group"><label>Price (box / lot cost)</label>
+                <input type="number" step="0.01" name="price" value="{{ v.price }}" placeholder="89.99"></div>
+            <div class="form-group"><label>Tax</label><input type="number" step="0.01" name="tax" value="{{ v.tax }}" placeholder="0.00"></div>
+            <div class="form-group"><label>Shipping In</label><input type="number" step="0.01" name="shipping" value="{{ v.shipping }}" placeholder="0.00"></div>
+            <div class="form-group"><label>Other Fees</label><input type="number" step="0.01" name="other_fees" value="{{ v.other_fees }}" placeholder="0.00"></div>
+        </fieldset>
+        <fieldset>
+            <legend>Packs</legend>
+            <div class="form-group"><label>Packs Total</label><input type="number" name="packs_total" value="{{ v.packs_total }}" placeholder="16"></div>
+            <div class="form-group"><label>Cards per Pack</label><input type="number" name="cards_per_pack" value="{{ v.cards_per_pack }}" placeholder="9"></div>
+            <div class="form-group"><label>Packs Opened Now</label><input type="number" name="packs_now" value="{{ v.packs_now }}" placeholder="blank = whole box · 0 = sealed/unopened"></div>
+        </fieldset>
+        <fieldset>
+            <legend>Provenance (optional)</legend>
+            <div class="form-group"><label>Source</label><input type="text" name="source" value="{{ v.source }}" placeholder="vendor / store"></div>
+            <div class="form-group"><label>Channel</label><input type="text" name="channel" value="{{ v.channel }}" placeholder="tcgplayer / lgs / ebay"></div>
+        </fieldset>
+    </div>
+
+    <!-- ===== SINGLES ===== -->
+    <div class="mode-section" data-mode="singles">
+        <fieldset>
+            <legend>Acquisition</legend>
+            <div class="form-group"><label>Description</label>
+                <input type="text" name="description" value="{{ v.description }}" placeholder="LGS singles 2026-06-12"></div>
+            <div class="form-group"><label>Purchase Date</label>
+                <input type="date" name="purchase_date" value="{{ v.purchase_date }}"></div>
+            <div class="form-group"><label>Game</label>
+                <select name="game">{% for g in games %}<option value="{{ g }}" {{ 'selected' if g == v.game }}>{{ g }}</option>{% endfor %}</select></div>
+            <div class="form-group"><label>Language</label>
+                <input type="text" name="language" value="{{ v.language }}" placeholder="EN"></div>
+            <div class="form-group"><label>Source</label><input type="text" name="source" value="{{ v.source }}" placeholder="vendor / store"></div>
+            <div class="form-group"><label>Channel</label><input type="text" name="channel" value="{{ v.channel }}" placeholder="lgs / tcgplayer"></div>
+        </fieldset>
+        <p class="mode-note">Basis is <strong>what you paid</strong> — no allocation. Enter the paid
+           price per card (in the card list, or adjust on the next screen).</p>
+    </div>
+
+    <!-- ===== APPEND ===== -->
+    <div class="mode-section" data-mode="append">
+        <fieldset>
+            <legend>Existing Box</legend>
+            <div class="form-group"><label>Append to</label>
+                <select name="acquisition_id">
+                    <option value="">— choose a sealed/partial box —</option>
+                    {% for a in appendable %}
+                    <option value="{{ a.acquisition_id }}" {{ 'selected' if a.acquisition_id|string == v.acquisition_id }}>
+                        {{ a.description }} ({{ a.packs_opened or 0 }}/{{ a.packs_total or '?' }} · {{ a.status }})
+                    </option>
+                    {% endfor %}
+                </select></div>
+            <div class="form-group"><label>Packs Opened This Session</label>
+                <input type="number" name="packs_now" value="{{ v.packs_now }}" placeholder="e.g. 4"></div>
+            <div class="form-group"><label>Language</label>
+                <input type="text" name="language" value="{{ v.language }}" placeholder="EN"></div>
+        </fieldset>
+        <p class="mode-note">The newly added cards are appended and the whole box's cost is
+           <strong>re-allocated</strong> across the combined pulls.</p>
+        {% if not appendable %}
+        <p class="mode-note">No sealed/partial boxes to append to yet.</p>
+        {% endif %}
+    </div>
+
+    <button type="submit">Preview →</button>
+</form>
+
+<style>
+    .error-banner {
+        background: rgba(201,74,106,0.08); border: 1px solid rgba(201,74,106,0.3);
+        border-radius: var(--radius); padding: 14px 18px; margin-bottom: 18px;
+    }
+    .error-banner p { color: var(--red); }
+    .form-group input[type="file"] { color: var(--text-mid); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
+    .mode-section, .intake-section { display: none; }
+    .mode-note { margin: 4px 0 14px; font-size: 0.84rem; }
+    .mode-note code { color: var(--sapphire); font-family: 'DM Mono', monospace; }
+
+    .manual-table { font-size: 0.82rem; }
+    .manual-table th { white-space: nowrap; }
+    .manual-table td { padding: 6px 6px; }
+    .manual-table input, .manual-table select {
+        background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--radius-sm);
+        color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.82rem; padding: 6px 8px;
+    }
+    .manual-table input:focus, .manual-table select:focus { border-color: var(--gold); outline: none; }
+    .m-name { width: 160px; } .m-sm { width: 90px; } .m-xs { width: 64px; }
+    .remove-row {
+        background: transparent; border: 1px solid var(--border-mid); color: var(--text-mid);
+        border-radius: var(--radius-sm); cursor: pointer; padding: 5px 10px; font-size: 0.9rem;
+    }
+    .remove-row:hover { border-color: var(--red); color: var(--red); }
+    .ghost-btn {
+        background: transparent; border: 1px solid var(--border-mid); color: var(--text-mid);
+        border-radius: var(--radius-sm); cursor: pointer; padding: 9px 16px; font-size: 0.84rem;
+        width: auto; margin-top: 6px;
+    }
+    .ghost-btn:hover { border-color: var(--gold); color: var(--gold); }
+</style>
+
+<script>
+(function () {
+    var MANUAL_PREFILL = {{ (rows or []) | tojson }};
+
+    var modeSel = document.getElementById('mode-select');
+    var intakeSel = document.getElementById('intake-select');
+    var modeSections = document.querySelectorAll('.mode-section');
+    var intakeSections = document.querySelectorAll('.intake-section');
+
+    function setActive(sections, key, attr) {
+        sections.forEach(function (sec) {
+            var active = sec.dataset[attr] === key;
+            sec.style.display = active ? 'block' : 'none';
+            sec.querySelectorAll('input, select, textarea').forEach(function (el) {
+                el.disabled = !active;          // disabled inputs don't submit
+            });
+        });
+    }
+    function apply() {
+        setActive(modeSections, modeSel.value, 'mode');
+        setActive(intakeSections, intakeSel.value, 'intake');
+    }
+    modeSel.addEventListener('change', apply);
+    intakeSel.addEventListener('change', apply);
+
+    // --- manual rows ---
+    var tbody = document.getElementById('manual-rows');
+    var CONDITIONS = ['', 'NM', 'LP', 'MP', 'HP', 'DMG'];
+    var rowIdx = 0;
+
+    function esc(s) { return (s == null ? '' : String(s)).replace(/"/g, '&quot;'); }
+
+    function addRow(data) {
+        data = data || {};
+        var i = rowIdx++;
+        var opts = CONDITIONS.map(function (c) {
+            var sel = (data.condition || '') === c ? ' selected' : '';
+            return '<option value="' + c + '"' + sel + '>' + (c || '—') + '</option>';
+        }).join('');
+        var tr = document.createElement('tr');
+        tr.innerHTML =
+            '<td><input class="m-name" type="text" name="item_name_' + i + '" value="' + esc(data.name) + '" placeholder="Card name"></td>' +
+            '<td><input class="m-sm" type="text" name="item_set_code_' + i + '" value="' + esc(data.set_code) + '"></td>' +
+            '<td><input class="m-sm" type="text" name="item_collector_number_' + i + '" value="' + esc(data.collector_number) + '"></td>' +
+            '<td><input class="m-sm" type="text" name="item_variant_' + i + '" value="' + esc(data.variant) + '"></td>' +
+            '<td><select name="item_condition_' + i + '">' + opts + '</select></td>' +
+            '<td><input class="m-xs" type="number" step="0.01" name="item_market_value_' + i + '" value="' + esc(data.market_value) + '"></td>' +
+            '<td><input class="m-xs" type="number" step="0.01" name="item_paid_' + i + '" value="' + esc(data.paid) + '"></td>' +
+            '<td><input class="m-xs" type="number" name="item_qty_' + i + '" value="' + esc(data.qty || 1) + '"></td>' +
+            '<td><button type="button" class="remove-row" title="Remove">✕</button></td>';
+        tbody.appendChild(tr);
+        apply();   // match current enabled/disabled state
+    }
+
+    tbody.addEventListener('click', function (e) {
+        if (e.target.classList.contains('remove-row')) {
+            e.target.closest('tr').remove();
+        }
+    });
+    document.getElementById('add-row').addEventListener('click', function () { addRow(); });
+
+    if (MANUAL_PREFILL.length) {
+        MANUAL_PREFILL.forEach(function (r) { addRow(r); });
+    } else {
+        addRow(); addRow(); addRow();
+    }
+
+    apply();
+})();
+</script>
+
+{% endblock %}

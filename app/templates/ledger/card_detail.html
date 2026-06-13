@@ -1,0 +1,116 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<header>
+    <h1>{{ card.name }}</h1>
+</header>
+
+<div class="card-detail">
+    <div class="card-detail-img">
+        {% if card.image_url %}
+        <img src="{{ card.image_url }}" alt="{{ card.name }}">
+        {% else %}
+        <div class="grid-card-placeholder">🃏</div>
+        {% endif %}
+        <span class="status-badge status-{{ card.status }}">{{ card.status }}</span>
+    </div>
+
+    <div class="card-detail-info">
+        <!-- Identity -->
+        <div class="info-block">
+            <h4>Identity</h4>
+            <ul class="stat-list">
+                <li><span>Set</span> <strong>{{ card.set_code or '—' }}</strong></li>
+                <li><span>Number</span> <strong>{{ card.collector_number or '—' }}</strong></li>
+                <li><span>Variant</span> <strong>{{ card.variant or '—' }}</strong></li>
+                <li><span>Game</span> <strong>{{ card.game }}</strong></li>
+                <li><span>Language</span> <strong>{{ card.language }}</strong></li>
+                <li><span>Condition</span> <strong>{{ card.condition or '—' }}</strong></li>
+                {% if card.grader %}
+                <li><span>Grade</span> <strong>{{ card.grader }} {{ card.grade }}</strong></li>
+                {% endif %}
+            </ul>
+        </div>
+
+        <!-- Money -->
+        <div class="info-block">
+            <h4>Valuation</h4>
+            <ul class="stat-list">
+                <li><span>Cost Basis</span> <strong>${{ "{:,.2f}".format(card.total_basis or 0) }}</strong></li>
+                <li><span>Market Value</span> <strong>${{ "{:,.2f}".format(card.market_value or 0) }}</strong></li>
+                {% if card.sale_date %}
+                <li><span>Sold</span> <strong>{{ card.sale_date }}{% if card.sold_via %} · {{ card.sold_via }}{% endif %}</strong></li>
+                <li><span>Net Proceeds</span> <strong>${{ "{:,.2f}".format(card.net_proceeds or 0) }}</strong></li>
+                <li><span>Realized Profit</span>
+                    <strong class="{{ 'pos' if (card.realized_profit or 0) >= 0 else 'neg' }}">
+                        ${{ "{:,.2f}".format(card.realized_profit or 0) }}
+                    </strong></li>
+                {% if card.holding_days is not none %}
+                <li><span>Held</span> <strong>{{ card.holding_days }} days</strong></li>
+                {% endif %}
+                {% endif %}
+            </ul>
+        </div>
+
+        <!-- Origin -->
+        <div class="info-block">
+            <h4>Origin</h4>
+            <ul class="stat-list">
+                <li><span>Acquired</span> <strong>{{ card.purchase_date }}</strong></li>
+                {% if card.source %}<li><span>Source</span> <strong>{{ card.source }}</strong></li>{% endif %}
+            </ul>
+            <a class="origin-link" href="{{ url_for('ledger.box_detail', acquisition_id=card.acquisition_id) }}">
+                From: {{ card.acquisition_description }} →
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card-detail { display: flex; gap: 28px; flex-wrap: wrap; }
+    .card-detail-img {
+        position: relative;
+        flex: 0 0 280px;
+        max-width: 280px;
+        aspect-ratio: 5 / 7;
+        border-radius: var(--radius);
+        overflow: hidden;
+        background: var(--bg-card);
+        border: 1px solid var(--border-mid);
+    }
+    .card-detail-img img { width: 100%; height: 100%; object-fit: cover; }
+    .card-detail-img .status-badge { position: absolute; top: 12px; right: 12px; backdrop-filter: blur(8px); }
+    .card-detail-img .grid-card-placeholder {
+        position: absolute; inset: 0; display: flex; align-items: center;
+        justify-content: center; font-size: 3.4rem; color: var(--text-dim);
+    }
+    .card-detail-info { flex: 1 1 320px; display: flex; flex-direction: column; gap: 22px; }
+    .info-block {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px 20px;
+    }
+    .origin-link {
+        display: inline-block; margin-top: 12px;
+        font-size: 0.82rem; color: var(--gold); text-decoration: none;
+    }
+    .origin-link:hover { color: var(--gold-light); }
+    .stat-list strong.pos { color: var(--green); }
+    .stat-list strong.neg { color: var(--red); }
+
+    /* status badge palette (shared with collection grid) */
+    .status-badge {
+        font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.06em;
+        padding: 3px 8px; border-radius: 20px; font-weight: 600; white-space: nowrap;
+    }
+    .status-inventory { background: rgba(74,127,212,0.2);  color: var(--sapphire); }
+    .status-listed    { background: rgba(212,168,67,0.2);  color: var(--gold-light); }
+    .status-sold      { background: rgba(74,201,148,0.2);  color: var(--green); }
+    .status-keep      { background: rgba(200,216,240,0.15); color: var(--starlight); }
+    .status-grading   { background: rgba(201,74,106,0.18); color: var(--red); }
+    .status-lost      { background: rgba(61,80,112,0.3);   color: var(--text-dim); }
+</style>
+
+{% endblock %}
