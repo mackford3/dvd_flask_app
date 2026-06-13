@@ -3,20 +3,20 @@
 {% block content %}
 
 <header>
-    <h1>QR Code Results</h1>
+    <h1>Location Contents</h1>
 </header>
 
-<h2>Location: {{ param['loc'] }}</h2>
-<p>Total items in this location: <strong>{{ counts[0].count }}</strong></p>
+<h2>Shelf: {{ param['loc'] }}</h2>
+<p>Tales stored here: <strong>{{ counts[0].count }}</strong></p>
 
 <table>
     <thead>
         <tr>
-            <th>Location</th>
-            <th>Title</th>
-            <th>Sub Title</th>
-            <th>Type</th>
-            <th>Disk Type</th>
+            <th>Shelf</th>
+            <th>Tale</th>
+            <th>Volume</th>
+            <th>Form</th>
+            <th>Format</th>
         </tr>
     </thead>
     <tbody>

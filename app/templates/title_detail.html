@@ -3,7 +3,7 @@
 {% block content %}
 
 <!-- Back button -->
-<a href="javascript:history.back()" class="back-btn">← Back</a>
+<a href="javascript:history.back()" class="back-btn">← Return to the Storybook</a>
 
 <!-- Hero: Poster + Title Info -->
 <div class="detail-hero">
@@ -24,10 +24,10 @@
                 <span class="detail-tag">{{ title.total_seasons }} Season{% if title.total_seasons != 1 %}s{% endif %}</span>
             {% endif %}
             {% if title.ongoing_ind %}
-                <span class="detail-tag detail-tag--gold">Ongoing</span>
+                <span class="detail-tag detail-tag--gold">Still Being Told</span>
             {% endif %}
             {% if title.complete_collection %}
-                <span class="detail-tag detail-tag--green">Complete Collection</span>
+                <span class="detail-tag detail-tag--green">Complete</span>
             {% endif %}
         </div>
 
@@ -41,18 +41,18 @@
         <!-- Stats row -->
         <div class="detail-stats">
             <div class="detail-stat">
-                <span class="detail-stat-label">Disks Owned</span>
+                <span class="detail-stat-label">Volumes Owned</span>
                 <span class="detail-stat-value">{{ disks | length }}</span>
             </div>
             <div class="detail-stat">
-                <span class="detail-stat-label">Total Spent</span>
+                <span class="detail-stat-label">Treasury Spent</span>
                 <span class="detail-stat-value">${{ "{:,.2f}".format(total_spend) }}</span>
             </div>
             {% if title.tmdb_id %}
             <div class="detail-stat">
                 <a href="https://www.themoviedb.org/{{ 'movie' if title.type == 'movie' else 'tv' }}/{{ title.tmdb_id }}"
                    target="_blank" class="detail-tmdb-link">
-                   View on TMDB ↗
+                   Source Record ↗
                 </a>
             </div>
             {% endif %}
@@ -61,7 +61,7 @@
 </div>
 
 <!-- Disk Editions -->
-<h3 class="section-heading">Disk Editions</h3>
+<h3 class="section-heading">Physical Volumes</h3>
 
 {% if disks %}
 <div class="disk-list">
@@ -83,7 +83,7 @@
         <div class="disk-meta-grid">
             {% if disk.location_label %}
             <div class="disk-meta-item">
-                <span class="disk-meta-label">Location</span>
+                <span class="disk-meta-label">Stored At</span>
                 <span class="disk-meta-value">{{ disk.location_label }}</span>
             </div>
             {% endif %}
@@ -128,7 +128,7 @@
         <!-- Purchase Info -->
         {% if disk.purchase_date or disk.cost %}
         <div class="disk-purchase">
-            <span class="disk-purchase-label">Purchase</span>
+            <span class="disk-purchase-label">Acquisition</span>
             <div class="disk-purchase-row">
                 {% if disk.purchase_date %}
                     <span>{{ disk.purchase_date }}</span>
@@ -153,7 +153,7 @@
     {% endfor %}
 </div>
 {% else %}
-<p class="empty-state">No disk editions recorded yet.</p>
+<p class="empty-state">This tale has no volumes chronicled yet.</p>
 {% endif %}
 
 <!-- ── Styles ─────────────────────────────────────────────── -->
@@ -207,16 +207,18 @@
 
     .detail-type-badge {
         display: inline-block;
-        font-size: 0.68rem;
-        font-weight: 700;
+        font-family: 'Cinzel', serif;
+        font-size: 0.65rem;
+        font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.1em;
+        letter-spacing: 0.14em;
         color: var(--gold);
         background: var(--gold-dim);
-        border: 1px solid rgba(201,168,76,0.2);
+        border: 1px solid rgba(212,168,67,0.25);
         border-radius: 4px;
         padding: 3px 8px;
         margin-bottom: 10px;
+        box-shadow: 0 0 12px rgba(212,168,67,0.12);
     }
     .detail-title {
         font-size: clamp(1.4rem, 4vw, 2rem);
@@ -238,8 +240,8 @@
         padding: 3px 9px;
         color: var(--text-mid);
     }
-    .detail-tag--gold  { color: var(--gold);  border-color: rgba(201,168,76,0.3);  background: var(--gold-dim); }
-    .detail-tag--green { color: var(--green); border-color: rgba(92,224,138,0.25); background: rgba(92,224,138,0.06); }
+    .detail-tag--gold  { color: var(--gold);  border-color: rgba(212,168,67,0.3);  background: var(--gold-dim); }
+    .detail-tag--green { color: var(--green); border-color: rgba(74,201,148,0.25); background: rgba(74,201,148,0.06); }
 
     .detail-brand {
         font-size: 0.82rem;
@@ -265,14 +267,17 @@
     .detail-stat-value { font-size: 1.1rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
     .detail-tmdb-link {
         font-size: 0.8rem;
-        color: var(--gold);
+        color: var(--sapphire);
         text-decoration: none;
-        border: 1px solid rgba(201,168,76,0.3);
+        border: 1px solid rgba(74,127,212,0.3);
         border-radius: var(--radius-sm);
         padding: 6px 12px;
         transition: all var(--transition);
     }
-    .detail-tmdb-link:hover { background: var(--gold-dim); }
+    .detail-tmdb-link:hover {
+        background: var(--sapphire-dim);
+        box-shadow: 0 0 12px rgba(74,127,212,0.15);
+    }
 
     /* ── Section Heading ────────────────────────────────────── */
     .section-heading {
@@ -293,9 +298,25 @@
         border: 1px solid var(--border);
         border-radius: var(--radius);
         padding: 18px 20px;
-        transition: border-color var(--transition);
+        position: relative;
+        transition: all var(--transition);
     }
-    .disk-card:hover { border-color: var(--border-mid); }
+    .disk-card::before {
+        content: '';
+        position: absolute;
+        top: -1px; left: 0; right: 0;
+        height: 2px;
+        border-radius: var(--radius) var(--radius) 0 0;
+        background: linear-gradient(to right, transparent, var(--gold) 25%, var(--sapphire) 50%, var(--gold) 75%, transparent);
+        opacity: 0;
+        transition: opacity var(--transition);
+    }
+    .disk-card:hover {
+        border-color: var(--border-mid);
+        box-shadow: 0 4px 24px rgba(74,127,212,0.06);
+        transform: translateY(-1px);
+    }
+    .disk-card:hover::before { opacity: 1; }
 
     .disk-card-header {
         display: flex;
@@ -309,10 +330,10 @@
         font-family: 'DM Mono', monospace;
         font-size: 0.75rem;
         background: var(--bg-raised);
-        color: var(--gold);
+        color: var(--sapphire);
         padding: 3px 8px;
         border-radius: 4px;
-        border: 1px solid var(--border);
+        border: 1px solid rgba(74,127,212,0.2);
         flex-shrink: 0;
     }
 

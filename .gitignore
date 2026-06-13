@@ -14,6 +14,9 @@ app/static/video/
 requirements.txt
 .DS_Store
 
+unraid/*
+unraid
+context.md
 
 # C extensions
 *.so
