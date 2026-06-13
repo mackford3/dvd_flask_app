@@ -9,7 +9,7 @@
 <!-- Filters: name (ILIKE), game, status -->
 <section class="search-container">
     <form action="{{ url_for('ledger.collection') }}" method="GET">
-        <input type="text" name="name" value="{{ name_query }}" placeholder="Search by card name...">
+        <input type="text" name="name" value="{{ name_query }}" placeholder="Search name, set, or number...">
         <select name="game" class="filter-select">
             <option value="">All games</option>
             {% for g in games %}

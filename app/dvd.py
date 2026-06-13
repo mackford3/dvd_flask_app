@@ -1,13 +1,15 @@
 from flask import Flask
 from config import Config
 from extensions import db
-from models import reflect_models
+from models import reflect_models, reflect_game_models
 from routes.home import home_bp
 from routes.search import search_bp
 from routes.media import media_bp
 from routes.api import api_bp
 from routes.titles import title_bp
 from routes.ledger import ledger_bp
+from routes.games import games_bp
+from routes.locate import locate_bp
 
 Titles    = None
 Dvds      = None
@@ -26,12 +28,19 @@ def create_app(config=Config) -> Flask:
         app.Dvds      = Dvds
         app.Purchases = Purchases
 
+        GameTitles, GameCopies, GamePurchases = reflect_game_models()
+        app.GameTitles    = GameTitles
+        app.GameCopies    = GameCopies
+        app.GamePurchases = GamePurchases
+
     app.register_blueprint(home_bp)
     app.register_blueprint(search_bp)
     app.register_blueprint(media_bp)
     app.register_blueprint(api_bp)
     app.register_blueprint(title_bp)
     app.register_blueprint(ledger_bp)
+    app.register_blueprint(games_bp)
+    app.register_blueprint(locate_bp)
 
     return app
 

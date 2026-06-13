@@ -1,0 +1,255 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<div class="hero-section">
+    <div class="search-overlay">
+        <h1>The Arcade</h1>
+        <section class="search-container">
+            <form action="{{ url_for('games.search') }}" method="GET">
+                <input type="text" name="name" placeholder="Seek a game by name...">
+                <button type="submit">Seek</button>
+                <a href="{{ url_for('games.search') }}">
+                    <button type="button">Clear</button>
+                </a>
+            </form>
+        </section>
+        <p>
+            <a class="link-btn" href="{{ url_for('games.add_game') }}">
+                Add a game →
+            </a>
+            &nbsp;·&nbsp;
+            <a class="link-btn" href="{{ url_for('locate.locate', type='games') }}">
+                Locate by shelf →
+            </a>
+        </p>
+    </div>
+</div>
+
+<!-- Cover Strip -->
+{% if covers %}
+<section class="poster-strip-section">
+    <h3 class="poster-strip-label">Games in the Collection</h3>
+    <div class="poster-track-wrapper">
+        <div class="poster-track" id="posterTrack">
+            {% for item in covers %}
+            <a class="poster-card"
+               href="{{ url_for('games.detail', title_id=item.game_title_id) }}"
+               data-rawg-id="{{ item.rawg_id }}"
+               data-title="{{ item.title }}">
+                <div class="poster-img-wrap">
+                    <img class="poster-img" src="" alt="{{ item.title }}" loading="lazy">
+                    <div class="poster-placeholder">🎮</div>
+                </div>
+                <span class="poster-title">{{ item.title }}</span>
+            </a>
+            {% endfor %}
+            {% for item in covers %}
+            <a class="poster-card"
+               href="{{ url_for('games.detail', title_id=item.game_title_id) }}"
+               data-rawg-id="{{ item.rawg_id }}"
+               data-title="{{ item.title }}">
+                <div class="poster-img-wrap">
+                    <img class="poster-img" src="" alt="{{ item.title }}" loading="lazy">
+                    <div class="poster-placeholder">🎮</div>
+                </div>
+                <span class="poster-title">{{ item.title }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<style>
+    .poster-strip-section { margin-bottom: 36px; overflow: hidden; }
+    .poster-strip-label { margin-bottom: 14px; }
+    .poster-track-wrapper {
+        overflow-x: auto; overflow-y: hidden; width: 100%; cursor: grab;
+        mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+        -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+        -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .poster-track-wrapper::-webkit-scrollbar { display: none; }
+    .poster-track {
+        display: flex; gap: 12px; width: max-content;
+        animation: posterScroll 200s linear infinite;
+    }
+    .poster-track:hover { animation-play-state: paused; }
+    @keyframes posterScroll {
+        0%   { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+    }
+    .poster-card {
+        flex: 0 0 110px; display: flex; flex-direction: column; align-items: center;
+        gap: 8px; text-decoration: none; cursor: pointer; transition: transform 200ms ease;
+    }
+    .poster-card:hover { transform: translateY(-4px) scale(1.04); }
+    .poster-img-wrap {
+        position: relative; width: 110px; height: 150px; border-radius: 8px;
+        overflow: hidden; background: var(--bg-card); border: 1px solid var(--border);
+    }
+    .poster-img {
+        width: 100%; height: 100%; object-fit: cover; border-radius: 8px;
+        opacity: 0; transition: opacity 300ms ease;
+    }
+    .poster-img.loaded { opacity: 1; }
+    .poster-placeholder {
+        position: absolute; inset: 0; display: flex; align-items: center;
+        justify-content: center; font-size: 2rem; color: var(--text-dim);
+    }
+    .poster-placeholder.hidden { display: none; }
+    .poster-title {
+        font-size: 0.7rem; color: var(--text-dim); text-align: center; width: 110px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        transition: color 200ms ease;
+    }
+    .poster-card:hover .poster-title { color: var(--sapphire); }
+    .poster-card:hover .poster-img-wrap {
+        box-shadow: 0 0 20px rgba(74,127,212,0.25), 0 0 8px rgba(212,168,67,0.1);
+        border-color: rgba(74,127,212,0.3);
+    }
+</style>
+
+<script>
+(function() {
+    const RAWG_KEY = "{{ rawg_api_key or '' }}";
+    if (!RAWG_KEY) return;
+
+    const coverCache = {};
+
+    async function fetchCover(rawgId) {
+        if (rawgId in coverCache) return coverCache[rawgId];
+        try {
+            const res = await fetch(`https://api.rawg.io/api/games/${rawgId}?key=${RAWG_KEY}`);
+            if (!res.ok) return null;
+            const data = await res.json();
+            const url = data.background_image || null;
+            coverCache[rawgId] = url;
+            return url;
+        } catch { return null; }
+    }
+
+    async function loadCovers() {
+        const seen = new Set();
+        for (const card of document.querySelectorAll('.poster-card')) {
+            const rawgId = card.dataset.rawgId;
+            if (!rawgId || seen.has(rawgId)) continue;
+            seen.add(rawgId);
+            const url = await fetchCover(rawgId);
+            if (url) {
+                document.querySelectorAll(`.poster-card[data-rawg-id="${rawgId}"]`)
+                    .forEach(c => {
+                        const img = c.querySelector('.poster-img');
+                        const placeholder = c.querySelector('.poster-placeholder');
+                        img.onload = () => {
+                            img.classList.add('loaded');
+                            placeholder.classList.add('hidden');
+                        };
+                        img.src = url;
+                    });
+            }
+        }
+    }
+    document.addEventListener('DOMContentLoaded', loadCovers);
+})();
+// Drag to scroll
+const wrapper = document.querySelector('.poster-track-wrapper');
+if (wrapper) {
+    let isDown = false, startX, scrollLeft;
+    wrapper.addEventListener('mousedown', e => {
+        isDown = true; wrapper.style.cursor = 'grabbing';
+        startX = e.pageX - wrapper.offsetLeft; scrollLeft = wrapper.scrollLeft;
+    });
+    wrapper.addEventListener('mouseleave', () => { isDown = false; wrapper.style.cursor = 'grab'; });
+    wrapper.addEventListener('mouseup', () => { isDown = false; wrapper.style.cursor = 'grab'; });
+    wrapper.addEventListener('mousemove', e => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - wrapper.offsetLeft;
+        wrapper.scrollLeft = scrollLeft - (x - startX) * 1.5;
+    });
+}
+</script>
+
+<!-- Recently Added -->
+<h3>Newly Acquired Games</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Game</th>
+            <th>Platform</th>
+            <th>Edition</th>
+            <th>Condition</th>
+            <th>Date Acquired</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for g in games %}
+        <tr>
+            <td class="title-cell">
+                <a href="{{ url_for('games.detail', title_id=g['game_title_id']) }}" class="movie-link">
+                    <strong>{{ g['title'] }}</strong>
+                    <span class="hover-tip">View Details ↗</span>
+                </a>
+            </td>
+            <td><code>{{ g['platform'] }}</code></td>
+            <td>{{ g['edition'] or '—' }}</td>
+            <td>{{ g['copy_condition'] or '—' }}</td>
+            <td>{{ g['purchase_date'] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Library Overview -->
+<h1>The Game Library</h1>
+<div class="top-stats">
+    <div class="stat-card">
+        <h4>Games Owned</h4>
+        <div class="stat-value">{{ "{:,}".format(counts[0].count) }}</div>
+    </div>
+
+    <div class="stat-card">
+        <h4>By Platform</h4>
+        <ul class="stat-list">
+            {% for item in platforms %}
+                <li><span>{{ item.platform }}</span> <strong>{{ item.count }}</strong></li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<!-- Insights Carousel -->
+<h2 class="carousel-hint">Deeper Lore (Swipe →)</h2>
+<div class="stat-carousel">
+
+    <div class="carousel-card">
+        <h4>Genres</h4>
+        <ul class="stat-list">
+            {% for item in genres %}
+                <li><span>{{ item.genre }}</span> <strong>{{ item.count }}</strong></li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="carousel-card">
+        <h4>Treasury Ledger</h4>
+        <h4>By Platform</h4>
+        <ul class="stat-list">
+            {% for item in cost_plats %}
+                <li><span>{{ item.platform }}</span> <strong>${{ "{:,.2f}".format(item.sum or 0) }}</strong></li>
+            {% endfor %}
+        </ul>
+
+        <h4>By Merchant</h4>
+        <ul class="stat-list">
+            {% for item in cost_stores %}
+                <li><span>{{ item.store }}</span> <strong>${{ "{:,.2f}".format(item.sum or 0) }}</strong></li>
+            {% endfor %}
+        </ul>
+    </div>
+
+</div>
+
+{% endblock %}

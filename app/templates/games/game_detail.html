@@ -1,0 +1,264 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<a href="javascript:history.back()" class="back-btn">← Return to the Arcade</a>
+
+<div class="detail-hero">
+    <div class="detail-poster-wrap">
+        <div class="detail-poster-placeholder" id="posterPlaceholder">🎮</div>
+        <img id="detailPoster" class="detail-poster" src="" alt="{{ title.title }}">
+    </div>
+
+    <div class="detail-hero-info">
+        <div class="detail-type-badge">Video Game</div>
+        <h1 class="detail-title">{{ title.title }}</h1>
+
+        <div class="detail-meta-row">
+            {% if title.genre %}
+                <span class="detail-tag">{{ title.genre }}</span>
+            {% endif %}
+            {% if title.release_year %}
+                <span class="detail-tag">{{ title.release_year }}</span>
+            {% endif %}
+            {% if title.franchise %}
+                <span class="detail-tag detail-tag--gold">{{ title.franchise }}</span>
+            {% endif %}
+            {% if title.complete_collection %}
+                <span class="detail-tag detail-tag--green">Complete</span>
+            {% endif %}
+        </div>
+
+        {% if title.developer or title.publisher %}
+        <p class="detail-brand">
+            {{ title.developer }}{% if title.developer and title.publisher %} · {% endif %}{{ title.publisher }}
+        </p>
+        {% endif %}
+
+        <p class="detail-overview" id="rawgOverview"></p>
+
+        <div class="detail-stats">
+            <div class="detail-stat">
+                <span class="detail-stat-label">Copies Owned</span>
+                <span class="detail-stat-value">{{ copies | length }}</span>
+            </div>
+            <div class="detail-stat">
+                <span class="detail-stat-label">Treasury Spent</span>
+                <span class="detail-stat-value">${{ "{:,.2f}".format(total_spend) }}</span>
+            </div>
+            {% if title.rawg_id %}
+            <div class="detail-stat">
+                <a href="https://rawg.io/games/{{ title.rawg_id }}" target="_blank" class="detail-tmdb-link">
+                    Source Record ↗
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<h3 class="section-heading">Copies Owned</h3>
+
+{% if copies %}
+<div class="disk-list">
+    {% for copy in copies %}
+    <div class="disk-card">
+        <div class="disk-card-header">
+            <div class="disk-card-title">
+                {{ copy.edition or 'Standard Edition' }}
+            </div>
+            <code class="disk-type-badge">{{ copy.platform or '—' }}</code>
+        </div>
+
+        <div class="disk-meta-grid">
+            {% if copy.copy_condition %}
+            <div class="disk-meta-item">
+                <span class="disk-meta-label">Condition</span>
+                <span class="disk-meta-value">{{ copy.copy_condition }}</span>
+            </div>
+            {% endif %}
+            {% if copy.region %}
+            <div class="disk-meta-item">
+                <span class="disk-meta-label">Region</span>
+                <span class="disk-meta-value">{{ copy.region }}</span>
+            </div>
+            {% endif %}
+            {% if copy.location_label %}
+            <div class="disk-meta-item">
+                <span class="disk-meta-label">Stored At</span>
+                <span class="disk-meta-value">{{ copy.location_label }}</span>
+            </div>
+            {% endif %}
+            {% if copy.copy_notes %}
+            <div class="disk-meta-item">
+                <span class="disk-meta-label">Notes</span>
+                <span class="disk-meta-value">{{ copy.copy_notes }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if copy.purchase_date or copy.cost %}
+        <div class="disk-purchase">
+            <span class="disk-purchase-label">Acquisition</span>
+            <div class="disk-purchase-row">
+                {% if copy.purchase_date %}
+                    <span>{{ copy.purchase_date }}</span>
+                {% endif %}
+                {% if copy.cost %}
+                    <span class="disk-cost">${{ "{:,.2f}".format(copy.cost) }}</span>
+                {% endif %}
+                {% if copy.store %}
+                    <span>{{ copy.store }}</span>
+                {% endif %}
+                {% if copy.condition %}
+                    <span class="disk-condition">{{ copy.condition }}</span>
+                {% endif %}
+            </div>
+            {% if copy.notes %}
+                <p class="disk-notes">{{ copy.notes }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p class="empty-state">This game has no copies recorded yet.</p>
+{% endif %}
+
+<style>
+    .back-btn {
+        display: inline-block; font-size: 0.82rem; color: var(--text-dim);
+        text-decoration: none; margin-bottom: 24px; transition: color var(--transition);
+        letter-spacing: 0.02em;
+    }
+    .back-btn:hover { color: var(--gold); }
+
+    .detail-hero { display: flex; gap: 28px; margin-bottom: 40px; align-items: flex-start; }
+    .detail-poster-wrap {
+        flex-shrink: 0; width: 140px; height: 200px; border-radius: var(--radius);
+        overflow: hidden; background: var(--bg-card); border: 1px solid var(--border);
+        position: relative;
+    }
+    .detail-poster-placeholder {
+        position: absolute; inset: 0; display: flex; align-items: center;
+        justify-content: center; font-size: 2.5rem; color: var(--text-dim);
+    }
+    .detail-poster { width: 100%; height: 100%; object-fit: cover; display: none; }
+    .detail-poster.loaded { display: block; }
+    .detail-poster.loaded + .detail-poster-placeholder { display: none; }
+
+    .detail-hero-info { flex: 1; min-width: 0; }
+    .detail-type-badge {
+        display: inline-block; font-family: 'Cinzel', serif; font-size: 0.65rem;
+        font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em;
+        color: var(--gold); background: var(--gold-dim);
+        border: 1px solid rgba(212,168,67,0.25); border-radius: 4px; padding: 3px 8px;
+        margin-bottom: 10px; box-shadow: 0 0 12px rgba(212,168,67,0.12);
+    }
+    .detail-title { font-size: clamp(1.4rem, 4vw, 2rem); margin-bottom: 12px; line-height: 1.2; }
+    .detail-meta-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .detail-tag {
+        font-size: 0.75rem; font-weight: 500; background: var(--bg-raised);
+        border: 1px solid var(--border); border-radius: 4px; padding: 3px 9px; color: var(--text-mid);
+    }
+    .detail-tag--gold  { color: var(--gold);  border-color: rgba(212,168,67,0.3);  background: var(--gold-dim); }
+    .detail-tag--green { color: var(--green); border-color: rgba(74,201,148,0.25); background: rgba(74,201,148,0.06); }
+    .detail-brand { font-size: 0.82rem; color: var(--text-dim); margin-bottom: 10px; }
+    .detail-overview {
+        font-size: 0.88rem; color: var(--text-mid); line-height: 1.65;
+        margin-bottom: 18px; max-width: 520px;
+    }
+    .detail-stats { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
+    .detail-stat { display: flex; flex-direction: column; gap: 2px; }
+    .detail-stat-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); }
+    .detail-stat-value { font-size: 1.1rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+    .detail-tmdb-link {
+        font-size: 0.8rem; color: var(--sapphire); text-decoration: none;
+        border: 1px solid rgba(74,127,212,0.3); border-radius: var(--radius-sm);
+        padding: 6px 12px; transition: all var(--transition);
+    }
+    .detail-tmdb-link:hover { background: var(--sapphire-dim); box-shadow: 0 0 12px rgba(74,127,212,0.15); }
+
+    .section-heading {
+        font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+        color: var(--text-dim); margin-bottom: 16px; padding-bottom: 10px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .disk-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+    .disk-card {
+        background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+        padding: 18px 20px; position: relative; transition: all var(--transition);
+    }
+    .disk-card::before {
+        content: ''; position: absolute; top: -1px; left: 0; right: 0; height: 2px;
+        border-radius: var(--radius) var(--radius) 0 0;
+        background: linear-gradient(to right, transparent, var(--gold) 25%, var(--sapphire) 50%, var(--gold) 75%, transparent);
+        opacity: 0; transition: opacity var(--transition);
+    }
+    .disk-card:hover { border-color: var(--border-mid); box-shadow: 0 4px 24px rgba(74,127,212,0.06); transform: translateY(-1px); }
+    .disk-card:hover::before { opacity: 1; }
+    .disk-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 12px; }
+    .disk-card-title { font-weight: 600; color: var(--text); font-size: 0.95rem; }
+    .disk-type-badge {
+        font-family: 'DM Mono', monospace; font-size: 0.75rem; background: var(--bg-raised);
+        color: var(--sapphire); padding: 3px 8px; border-radius: 4px;
+        border: 1px solid rgba(74,127,212,0.2); flex-shrink: 0;
+    }
+    .disk-meta-grid { display: flex; flex-wrap: wrap; gap: 14px 24px; margin-bottom: 14px; }
+    .disk-meta-item { display: flex; flex-direction: column; gap: 2px; }
+    .disk-meta-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); }
+    .disk-meta-value { font-size: 0.85rem; color: var(--text-mid); }
+    .disk-purchase { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 4px; }
+    .disk-purchase-label {
+        font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em;
+        color: var(--text-dim); display: block; margin-bottom: 6px;
+    }
+    .disk-purchase-row { display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.85rem; color: var(--text-mid); align-items: center; }
+    .disk-cost { color: var(--text); font-weight: 600; }
+    .disk-condition {
+        font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+        background: var(--bg-raised); border: 1px solid var(--border); border-radius: 4px;
+        padding: 2px 7px; color: var(--text-dim);
+    }
+    .disk-notes { font-size: 0.82rem; color: var(--text-dim); margin-top: 6px; font-style: italic; }
+    .empty-state { color: var(--text-dim); font-size: 0.9rem; padding: 20px 0; }
+
+    @media (max-width: 500px) {
+        .detail-hero { flex-direction: column; align-items: center; text-align: center; }
+        .detail-meta-row { justify-content: center; }
+        .detail-stats { justify-content: center; }
+        .detail-overview { text-align: left; }
+    }
+</style>
+
+<script>
+(function () {
+    const RAWG_KEY = "{{ rawg_api_key or '' }}";
+    const rawgId   = "{{ title.rawg_id or '' }}";
+    if (!RAWG_KEY || !rawgId) return;
+
+    fetch(`https://api.rawg.io/api/games/${rawgId}?key=${RAWG_KEY}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.background_image) {
+                const img = document.getElementById('detailPoster');
+                img.src = data.background_image;
+                img.onload = () => {
+                    img.classList.add('loaded');
+                    document.getElementById('posterPlaceholder').style.display = 'none';
+                };
+            }
+            // RAWG descriptions are HTML; strip tags for a plain summary.
+            const raw = data.description_raw || '';
+            if (raw) {
+                document.getElementById('rawgOverview').textContent =
+                    raw.length > 360 ? raw.slice(0, 360) + '…' : raw;
+            }
+        })
+        .catch(e => console.warn('RAWG fetch failed', e));
+})();
+</script>
+
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<header>
+    <h1>Locate by Shelf</h1>
+</header>
+
+<section class="search-container">
+    <form action="{{ url_for('locate.locate') }}" method="GET">
+        <input type="hidden" name="type" value="{{ kind }}">
+        <input type="text" name="location" value="{{ location }}"
+               placeholder="Scan or type a shelf / bin label...">
+        <button type="submit">Find</button>
+        <a href="{{ url_for('locate.locate') }}">
+            <button type="button">Clear</button>
+        </a>
+    </form>
+</section>
+
+<!-- Collection toggle -->
+<div class="locate-toggle">
+    {% set tabs = [('all', 'All'), ('movies', 'Movies'), ('cards', 'Cards'), ('games', 'Games')] %}
+    {% for value, label in tabs %}
+        <a class="locate-tab {% if kind == value %}active{% endif %}"
+           href="{{ url_for('locate.locate', type=value, location=location) }}">
+            {{ label }}
+        </a>
+    {% endfor %}
+</div>
+
+{% if not location %}
+    <p class="empty-state">Enter a location above to see everything stored there.</p>
+{% else %}
+    <p class="locate-summary">
+        <strong>{{ total }}</strong> item{{ '' if total == 1 else 's' }} found at
+        “<strong>{{ location }}</strong>”
+    </p>
+
+    {% if kind in ('all', 'movies') %}
+    <section class="locate-group">
+        <h3 class="section-heading">🏛 Movies &amp; Shows · {{ movies | length }}</h3>
+        {% if movies %}
+        <table>
+            <thead>
+                <tr><th>Tale</th><th>Volume</th><th>Form</th><th>Format</th><th>Stored At</th></tr>
+            </thead>
+            <tbody>
+                {% for m in movies %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('title.detail', title_id=m['media_title_id']) }}" class="movie-link">
+                            <strong>{{ m['title'] }}</strong>
+                            <span class="hover-tip">View Details ↗</span>
+                        </a>
+                    </td>
+                    <td>{{ m['season_name'] or '—' }}</td>
+                    <td>{{ m['type'] }}</td>
+                    <td><code>{{ m['disk_type'] or '—' }}</code></td>
+                    <td>{{ m['location_label'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="empty-state">No movies here.</p>
+        {% endif %}
+    </section>
+    {% endif %}
+
+    {% if kind in ('all', 'cards') %}
+    <section class="locate-group">
+        <h3 class="section-heading">🃏 Cards · {{ cards | length }}</h3>
+        {% if cards %}
+        <table>
+            <thead>
+                <tr><th>Card</th><th>Set</th><th>Condition</th><th>Status</th><th>Stored At</th></tr>
+            </thead>
+            <tbody>
+                {% for c in cards %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('ledger.card_detail', item_id=c['item_id']) }}" class="movie-link">
+                            <strong>{{ c['name'] }}</strong>
+                            <span class="hover-tip">View Details ↗</span>
+                        </a>
+                    </td>
+                    <td>{{ c['set_code'] or '—' }}</td>
+                    <td>{{ c['condition'] or '—' }}</td>
+                    <td>{{ c['status'] or '—' }}</td>
+                    <td>{{ c['storage_location'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="empty-state">No cards here.</p>
+        {% endif %}
+    </section>
+    {% endif %}
+
+    {% if kind in ('all', 'games') %}
+    <section class="locate-group">
+        <h3 class="section-heading">🎮 Games · {{ games | length }}</h3>
+        {% if games %}
+        <table>
+            <thead>
+                <tr><th>Game</th><th>Platform</th><th>Edition</th><th>Condition</th><th>Stored At</th></tr>
+            </thead>
+            <tbody>
+                {% for g in games %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('games.detail', title_id=g['game_title_id']) }}" class="movie-link">
+                            <strong>{{ g['title'] }}</strong>
+                            <span class="hover-tip">View Details ↗</span>
+                        </a>
+                    </td>
+                    <td><code>{{ g['platform'] }}</code></td>
+                    <td>{{ g['edition'] or '—' }}</td>
+                    <td>{{ g['copy_condition'] or '—' }}</td>
+                    <td>{{ g['location_label'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="empty-state">No games here.</p>
+        {% endif %}
+    </section>
+    {% endif %}
+{% endif %}
+
+<style>
+    .locate-toggle {
+        display: flex; gap: 8px; flex-wrap: wrap; margin: 20px 0 24px;
+    }
+    .locate-tab {
+        font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em;
+        color: var(--text-mid); text-decoration: none;
+        background: var(--bg-card); border: 1px solid var(--border);
+        border-radius: var(--radius-sm); padding: 8px 16px;
+        transition: all var(--transition);
+    }
+    .locate-tab:hover { border-color: var(--gold); color: var(--gold); }
+    .locate-tab.active {
+        color: #070b14; background: var(--gold); border-color: var(--gold);
+        box-shadow: 0 0 14px rgba(212,168,67,0.25);
+    }
+    .locate-summary { color: var(--text-mid); font-size: 0.9rem; margin-bottom: 20px; }
+    .locate-group { margin-bottom: 32px; }
+    .section-heading {
+        font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+        color: var(--text-dim); margin-bottom: 14px; padding-bottom: 10px;
+        border-bottom: 1px solid var(--border);
+    }
+    .empty-state { color: var(--text-dim); font-size: 0.9rem; padding: 8px 0 20px; }
+</style>
+
+{% endblock %}

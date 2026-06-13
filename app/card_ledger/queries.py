@@ -138,6 +138,23 @@ def appendable_acquisitions_query() -> str:
     """
 
 
+def location_search_query() -> str:
+    """Cards whose storage_location matches a shelf/bin label (for the unified locator)."""
+    s = _schema()
+    return f"""
+        SELECT
+            i.item_id,
+            i.name,
+            i.set_code,
+            i.condition,
+            i.status,
+            i.storage_location
+        FROM {s}.item i
+        WHERE i.storage_location ILIKE :loc
+        ORDER BY i.name
+    """
+
+
 def games_query() -> str:
     return f"SELECT DISTINCT game FROM {_schema()}.acquisition ORDER BY game"
 
