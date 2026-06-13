@@ -1,0 +1,135 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<header>
+    <h1>Card Ledger</h1>
+</header>
+
+<!-- Portfolio totals (read straight from v_portfolio) -->
+<div class="top-stats">
+    <div class="stat-card">
+        <h4>Total Invested</h4>
+        <div class="stat-value">${{ "{:,.0f}".format(portfolio.total_invested or 0) }}</div>
+    </div>
+    <div class="stat-card">
+        <h4>Realized Profit</h4>
+        <div class="stat-value {{ 'pos' if (portfolio.realized_profit or 0) >= 0 else 'neg' }}">
+            ${{ "{:,.0f}".format(portfolio.realized_profit or 0) }}
+        </div>
+    </div>
+    <div class="stat-card">
+        <h4>Unrealized Profit</h4>
+        <div class="stat-value {{ 'pos' if (portfolio.unrealized_profit or 0) >= 0 else 'neg' }}">
+            ${{ "{:,.0f}".format(portfolio.unrealized_profit or 0) }}
+        </div>
+    </div>
+    <div class="stat-card">
+        <h4>Unsold Value</h4>
+        <div class="stat-value">${{ "{:,.0f}".format(portfolio.unsold_market_value or 0) }}</div>
+    </div>
+</div>
+
+<!-- Card thumbnail strip (image_url straight from the import) -->
+{% if posters %}
+<section class="ledger-strip-section">
+    <h3>From the Binder</h3>
+    <div class="ledger-strip">
+        {% for card in posters %}
+        <a class="ledger-thumb" href="{{ url_for('ledger.card_detail', item_id=card.item_id) }}"
+           title="{{ card.name }}">
+            <div class="ledger-thumb-img">
+                <img src="{{ card.image_url }}" alt="{{ card.name }}" loading="lazy">
+            </div>
+            <span class="ledger-thumb-name">{{ card.name }}</span>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Per-box P&L (read straight from v_box_pl) -->
+<h3>Acquisitions</h3>
+<div class="table-scroll">
+<table>
+    <thead>
+        <tr>
+            <th>Acquisition</th>
+            <th>Date</th>
+            <th>Game</th>
+            <th>Invested</th>
+            <th>Net Result</th>
+            <th>ROI</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for box in boxes %}
+        <tr>
+            <td class="title-cell">
+                <a href="{{ url_for('ledger.box_detail', acquisition_id=box.acquisition_id) }}" class="movie-link">
+                    <strong>{{ box.description }}</strong>
+                    <span class="hover-tip">View Box ↗</span>
+                </a>
+            </td>
+            <td>{{ box.purchase_date }}</td>
+            <td>{{ box.game }}</td>
+            <td>${{ "{:,.2f}".format(box.total_invested or 0) }}</td>
+            <td class="{{ 'pos' if (box.net_result or 0) >= 0 else 'neg' }}">
+                ${{ "{:,.2f}".format(box.net_result or 0) }}
+            </td>
+            <td class="{{ 'pos' if (box.roi_pct or 0) >= 0 else 'neg' }}">
+                {% if box.roi_pct is not none %}{{ box.roi_pct }}%{% else %}—{% endif %}
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6">No acquisitions yet. Import a TCGplayer export to get started.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<style>
+    .stat-value.pos { color: var(--green); text-shadow: 0 0 20px rgba(74,201,148,0.25); }
+    .stat-value.neg { color: var(--red);   text-shadow: 0 0 20px rgba(201,74,106,0.25); }
+    td.pos { color: var(--green); font-variant-numeric: tabular-nums; }
+    td.neg { color: var(--red);   font-variant-numeric: tabular-nums; }
+
+    .ledger-strip-section { margin: 8px 0 36px; }
+    .ledger-strip {
+        display: flex;
+        gap: 12px;
+        overflow-x: auto;
+        padding-bottom: 8px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .ledger-strip::-webkit-scrollbar { display: none; }
+    .ledger-thumb {
+        flex: 0 0 110px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        transition: transform 200ms ease;
+    }
+    .ledger-thumb:hover { transform: translateY(-4px) scale(1.04); }
+    .ledger-thumb-img {
+        width: 110px; height: 154px;
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+    }
+    .ledger-thumb-img img { width: 100%; height: 100%; object-fit: cover; }
+    .ledger-thumb:hover .ledger-thumb-img {
+        box-shadow: 0 0 20px rgba(74,127,212,0.25), 0 0 8px rgba(212,168,67,0.1);
+        border-color: rgba(74,127,212,0.3);
+    }
+    .ledger-thumb-name {
+        font-size: 0.7rem; color: var(--text-dim); text-align: center;
+        width: 110px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+</style>
+
+{% endblock %}

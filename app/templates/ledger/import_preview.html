@@ -1,0 +1,166 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<header>
+    <h1>Review Before Saving</h1>
+</header>
+
+<p class="preview-intro">
+    Nothing has been written yet. This mirrors reviewing the SQL before running it —
+    confirm below, then save.
+</p>
+
+{% if parsed.warnings %}
+<div class="warn-banner">{% for w in parsed.warnings %}<p>⚠ {{ w }}</p>{% endfor %}</div>
+{% endif %}
+
+{# ============================ APPEND ============================ #}
+{% if mode == 'append' %}
+<div class="info-block">
+    <h4>Append to</h4>
+    <ul class="stat-list">
+        <li><span>Box</span> <strong>{{ target.description }}</strong></li>
+        <li><span>Currently</span> <strong>{{ target.packs_opened or 0 }} / {{ target.packs_total or '?' }} packs · {{ target.status }}</strong></li>
+        {% if v.packs_now %}<li><span>Opening now</span> <strong>+{{ v.packs_now }} packs</strong></li>{% endif %}
+        <li><span>Cards to add</span> <strong>{{ parsed.n_cards }}</strong></li>
+    </ul>
+    <p class="basis-note">The whole box's cost will be <strong>re-allocated</strong> across the
+       combined pulls via <code>allocate_box_cost()</code>.</p>
+</div>
+
+{# ============================ SINGLES =========================== #}
+{% elif mode == 'singles' %}
+<div class="info-block">
+    <h4>Singles Acquisition</h4>
+    <ul class="stat-list">
+        <li><span>Description</span> <strong>{{ v.description }}</strong></li>
+        <li><span>Date</span> <strong>{{ v.purchase_date }}</strong></li>
+        <li><span>Game</span> <strong>{{ v.game }}</strong></li>
+        <li><span>Cards</span> <strong>{{ parsed.n_cards }}</strong></li>
+    </ul>
+    <p class="basis-note">Basis is <strong>as-paid</strong> (no allocation). Enter the price paid
+       per card below{% if warn_paid %} — no <code>Paid</code> column was found, so these default
+       to market value{% endif %}.</p>
+</div>
+
+{# ============================ SEALED ============================ #}
+{% else %}
+<div class="info-block">
+    <h4>Acquisition</h4>
+    <ul class="stat-list">
+        <li><span>Description</span> <strong>{{ acq.description }}</strong></li>
+        <li><span>Date</span> <strong>{{ acq.purchase_date }}</strong></li>
+        <li><span>Type</span> <strong>{{ acq.product_type }}</strong></li>
+        <li><span>Game</span> <strong>{{ acq.game }}</strong></li>
+        <li><span>Set</span> <strong>{{ acq.set_code or '—' }}</strong></li>
+        {% if acq.packs_total %}<li><span>Packs</span> <strong>{{ acq.packs_opened or 0 }} / {{ acq.packs_total }} → {{ acq.status }}</strong></li>{% endif %}
+        <li><span>Cards parsed</span> <strong>{{ parsed.n_cards }}</strong></li>
+        <li><span>Market value (at open)</span> <strong>${{ "{:,.2f}".format(parsed.total_value) }}</strong></li>
+        <li><span>Total cost</span> <strong>${{ "{:,.2f}".format(total_cost) }}</strong></li>
+    </ul>
+    <p class="basis-note">Cost basis will be <strong>allocated</strong> across these cards by
+       market value via <code>allocate_box_cost()</code>.</p>
+</div>
+{% endif %}
+
+<!-- Confirm form: carries mode + intake + the exact inputs each commit needs -->
+<form action="{{ url_for('ledger.import_commit') }}" method="POST">
+    <input type="hidden" name="mode" value="{{ mode }}">
+    <input type="hidden" name="intake" value="{{ intake }}">
+    {% if intake == 'csv' %}<input type="hidden" name="token" value="{{ token }}">{% endif %}
+
+    {# Manual intake has no stashed file — carry the typed rows so commit rebuilds them. #}
+    {% if intake == 'manual' and rows %}
+        {% for r in rows if r.name and r.name.strip() %}
+        <input type="hidden" name="item_name_{{ loop.index0 }}" value="{{ r.name }}">
+        <input type="hidden" name="item_set_code_{{ loop.index0 }}" value="{{ r.set_code }}">
+        <input type="hidden" name="item_collector_number_{{ loop.index0 }}" value="{{ r.collector_number }}">
+        <input type="hidden" name="item_variant_{{ loop.index0 }}" value="{{ r.variant }}">
+        <input type="hidden" name="item_condition_{{ loop.index0 }}" value="{{ r.condition }}">
+        <input type="hidden" name="item_market_value_{{ loop.index0 }}" value="{{ r.market_value }}">
+        <input type="hidden" name="item_paid_{{ loop.index0 }}" value="{{ r.paid }}">
+        <input type="hidden" name="item_image_url_{{ loop.index0 }}" value="{{ r.image_url }}">
+        <input type="hidden" name="item_qty_{{ loop.index0 }}" value="{{ r.qty }}">
+        {% endfor %}
+    {% endif %}
+
+    {% if mode == 'append' %}
+        <input type="hidden" name="acquisition_id" value="{{ v.acquisition_id }}">
+        <input type="hidden" name="packs_now" value="{{ v.packs_now }}">
+        <input type="hidden" name="language" value="{{ v.language }}">
+    {% elif mode == 'singles' %}
+        <input type="hidden" name="description" value="{{ v.description }}">
+        <input type="hidden" name="purchase_date" value="{{ v.purchase_date }}">
+        <input type="hidden" name="game" value="{{ v.game }}">
+        <input type="hidden" name="language" value="{{ v.language }}">
+        <input type="hidden" name="tax" value="{{ v.tax }}">
+        <input type="hidden" name="shipping" value="{{ v.shipping }}">
+        <input type="hidden" name="other_fees" value="{{ v.other_fees }}">
+        <input type="hidden" name="source" value="{{ v.source }}">
+        <input type="hidden" name="channel" value="{{ v.channel }}">
+    {% else %}
+        {% for k in ['description','purchase_date','product_type','game','language','price',
+                     'tax','shipping','other_fees','packs_total','cards_per_pack','packs_now',
+                     'source','channel'] %}
+        <input type="hidden" name="{{ k }}" value="{{ v[k] }}">
+        {% endfor %}
+    {% endif %}
+
+    <h3>Cards ({{ parsed.n_cards }})</h3>
+    {% if not parsed['items'] %}
+    <p class="basis-note">No cards — logging the purchase only (e.g. a sealed/unopened pack).
+       You can append cards later when you open it.</p>
+    {% else %}
+    <div class="table-scroll">
+    <table>
+        <thead>
+            <tr>
+                <th>Card</th>
+                <th>Set</th>
+                <th>Number</th>
+                <th>Variant</th>
+                <th>Cond.</th>
+                <th>Market</th>
+                {% if mode == 'singles' %}<th>Paid</th>{% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in parsed['items'] %}
+            <tr>
+                <td><strong>{{ c.name }}</strong></td>
+                <td>{% if c.set_code %}<code>{{ c.set_code }}</code>{% endif %}</td>
+                <td>{{ c.collector_number or '—' }}</td>
+                <td>{{ c.variant or '—' }}</td>
+                <td>{{ c.condition or '—' }}</td>
+                <td>{% if c.market_value is not none %}${{ "{:,.2f}".format(c.market_value) }}{% else %}—{% endif %}</td>
+                {% if mode == 'singles' %}
+                <td><input class="paid-input" type="number" step="0.01" name="paid_{{ loop.index0 }}"
+                           value="{{ c.paid if c.paid is not none else (c.market_value if (warn_paid and c.market_value is not none) else '') }}"
+                           placeholder="0.00"></td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% endif %}
+
+    <button type="submit">✓ Confirm &amp; Save</button>
+</form>
+<a class="cancel-link" href="{{ url_for('ledger.import_csv') }}">← Back to edit</a>
+
+<style>
+    .preview-intro { margin-bottom: 20px; }
+    .info-block { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 28px; }
+    .basis-note { margin-top: 12px; font-size: 0.84rem; }
+    .basis-note code, .stat-list code { color: var(--sapphire); font-family: 'DM Mono', monospace; }
+    .warn-banner { background: rgba(212,168,67,0.08); border: 1px solid rgba(212,168,67,0.3); border-radius: var(--radius); padding: 14px 18px; margin-bottom: 18px; }
+    .warn-banner p { color: var(--gold-light); }
+    .paid-input { width: 90px; background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; padding: 6px 8px; }
+    .paid-input:focus { border-color: var(--gold); outline: none; }
+    .cancel-link { display: inline-block; margin-top: 14px; font-size: 0.84rem; color: var(--text-mid); text-decoration: none; }
+    .cancel-link:hover { color: var(--text); }
+</style>
+
+{% endblock %}
