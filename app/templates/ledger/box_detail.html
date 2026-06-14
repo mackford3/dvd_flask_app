@@ -80,6 +80,7 @@
             <th>Basis</th>
             <th>Market</th>
             <th>Status</th>
+            <th>Flag</th>
             <th></th>
         </tr>
     </thead>
@@ -97,6 +98,11 @@
             <td>${{ "{:,.2f}".format(c.total_basis or 0) }}</td>
             <td>${{ "{:,.2f}".format(c.market_value or 0) }}</td>
             <td><span class="status-badge status-{{ c.status }}">{{ c.status }}</span></td>
+            <td>
+                {% if c.tier == 'grade' %}<span class="flag-badge flag-grade">◆ Grade</span>
+                {% elif c.tier == 'review' %}<span class="flag-badge flag-review">👁 Review</span>
+                {% else %}<span class="flag-none">—</span>{% endif %}
+            </td>
             <td><a href="{{ url_for('ledger.card_detail', item_id=c.item_id) }}" class="manage-link">Sell / Grade →</a></td>
         </tr>
         {% else %}
@@ -126,6 +132,13 @@
     }
     .manage-link { font-size: 0.78rem; color: var(--sapphire); text-decoration: none; white-space: nowrap; }
     .manage-link:hover { color: var(--gold); }
+    .flag-badge {
+        font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+        padding: 2px 8px; border-radius: 20px; white-space: nowrap;
+    }
+    .flag-grade  { color: var(--gold);     background: var(--gold-dim);     border: 1px solid rgba(212,168,67,0.3); }
+    .flag-review { color: var(--sapphire); background: var(--sapphire-dim); border: 1px solid rgba(74,127,212,0.3); }
+    .flag-none { color: var(--text-dim); }
 
     .meta-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 28px; }
     .meta-pill {

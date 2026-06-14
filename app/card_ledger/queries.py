@@ -71,11 +71,13 @@ def item_ledger_base() -> str:
 
 
 def box_items_query() -> str:
-    """All ledger rows for one acquisition."""
+    """All ledger rows for one acquisition, with each card's grading tier (if any)."""
     return f"""
-        SELECT * FROM ({item_ledger_base()}) AS sub
-        WHERE acquisition_id = :id
-        ORDER BY name
+        SELECT sub.*, gc.tier
+        FROM ({item_ledger_base()}) AS sub
+        LEFT JOIN {_schema()}.v_grade_candidates gc ON gc.item_id = sub.item_id
+        WHERE sub.acquisition_id = :id
+        ORDER BY sub.name
     """
 
 
