@@ -22,9 +22,14 @@
             <option value="{{ s.status }}" {{ 'selected' if s.status == status_query }}>{{ s.status }}</option>
             {% endfor %}
         </select>
+        <select name="sort" class="filter-select">
+            {% for key, opt in sort_options.items() %}
+            <option value="{{ key }}" {{ 'selected' if key == sort_query }}>{{ opt[0] }}</option>
+            {% endfor %}
+        </select>
         <input type="hidden" name="view" value="{{ view }}">
         <button type="submit">Filter</button>
-        <a href="{{ url_for('ledger.collection', view=view) }}"><button type="button">Clear</button></a>
+        <a href="{{ url_for('ledger.collection', sort=sort_query, view=view) }}"><button type="button">Clear</button></a>
     </form>
 </section>
 
@@ -32,9 +37,9 @@
 <div class="view-toggle">
     <span class="result-count">{{ cards|length }} card{{ '' if cards|length == 1 else 's' }}</span>
     <div class="toggle-buttons">
-        <a href="{{ url_for('ledger.collection', name=name_query, game=game_query, status=status_query, view='grid') }}"
+        <a href="{{ url_for('ledger.collection', name=name_query, game=game_query, status=status_query, sort=sort_query, view='grid') }}"
            class="toggle-btn {{ 'active' if view == 'grid' }}">▦ Grid</a>
-        <a href="{{ url_for('ledger.collection', name=name_query, game=game_query, status=status_query, view='table') }}"
+        <a href="{{ url_for('ledger.collection', name=name_query, game=game_query, status=status_query, sort=sort_query, view='table') }}"
            class="toggle-btn {{ 'active' if view == 'table' }}">≣ Table</a>
     </div>
 </div>
@@ -100,19 +105,6 @@
 {% endif %}
 
 <style>
-    .search-container .filter-select {
-        flex: 0 1 150px;
-        background: rgba(255,255,255,0.08);
-        border: 1px solid rgba(255,255,255,0.15);
-        border-radius: var(--radius-sm);
-        color: var(--text);
-        font-family: 'DM Sans', sans-serif;
-        font-size: 0.9rem;
-        padding: 10px 14px;
-        outline: none;
-    }
-    .search-container .filter-select option { background: var(--bg-card); }
-
     .view-toggle {
         display: flex;
         align-items: center;

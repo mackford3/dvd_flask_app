@@ -8,8 +8,13 @@
 
 <section class="search-container">
     <form action="{{ url_for('games.search') }}" method="GET">
-        <input type="text" name="name" placeholder="Seek a game by name...">
-        <input type="text" name="location" placeholder="Search by location...">
+        <input type="text" name="name" value="{{ name_query }}" placeholder="Seek a game by name...">
+        <input type="text" name="location" value="{{ location_query }}" placeholder="Search by location...">
+        <select name="sort" class="filter-select">
+            {% for key, opt in sort_options.items() %}
+            <option value="{{ key }}" {{ 'selected' if key == sort_query }}>{{ opt[0] }}</option>
+            {% endfor %}
+        </select>
         <button type="submit">Seek</button>
         <a href="{{ url_for('games.search') }}">
             <button type="button">Clear</button>

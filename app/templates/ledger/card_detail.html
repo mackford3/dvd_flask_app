@@ -59,12 +59,154 @@
             <ul class="stat-list">
                 <li><span>Acquired</span> <strong>{{ card.purchase_date }}</strong></li>
                 {% if card.source %}<li><span>Source</span> <strong>{{ card.source }}</strong></li>{% endif %}
+                <li><span>Stored At</span> <strong>{{ card.storage_location or '—' }}</strong></li>
             </ul>
             <a class="origin-link" href="{{ url_for('ledger.box_detail', acquisition_id=card.acquisition_id) }}">
                 From: {{ card.acquisition_description }} →
             </a>
         </div>
     </div>
+</div>
+
+<!-- ── Grading "why" callout (shown when this card is a candidate) ─────────── -->
+{% if tier %}
+<div class="grade-callout {{ 'review' if tier == 'review' else '' }}">
+    <div class="grade-callout-head">
+        {% if tier == 'review' %}
+        <span class="grade-badge review">👁 Review — box outlier</span>
+        {% else %}
+        <span class="grade-badge">◆ Grade candidate</span>
+        {% endif %}
+        <span class="grade-reason">{{ grade_reason }}</span>
+    </div>
+    {% if tier == 'grade' %}
+    {% if upside is not none %}
+    <p class="grade-upside {{ 'pos' if upside >= 0 else 'neg' }}">
+        Estimated grading upside: <strong>${{ "{:,.2f}".format(upside) }}</strong>
+        <span class="grade-upside-note">(est. slab ${{ "{:,.2f}".format(card.graded_value_est) }} − raw ${{ "{:,.2f}".format(card.market_value or 0) }} − ~$30 grading)</span>
+    </p>
+    {% else %}
+    <p class="grade-upside-note">Add an estimated slab value below to see the grading upside.</p>
+    {% endif %}
+    {% endif %}
+    {% if history %}
+    <div class="grade-history">
+        <h5>Your grading history for “{{ card.name }}”</h5>
+        <ul class="stat-list">
+            {% for h in history %}
+            <li>
+                <span>{{ h.grader }} {{ h.grade }}{% if h.sale_date %} · sold {{ h.sale_date }}{% else %} · held{% endif %}</span>
+                {% if h.profit_after_grading is not none %}
+                <strong class="{{ 'pos' if h.profit_after_grading >= 0 else 'neg' }}">${{ "{:,.2f}".format(h.profit_after_grading) }}</strong>
+                {% else %}
+                <strong>mkt ${{ "{:,.2f}".format(h.market_value or 0) }}</strong>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- ── Action panel: edit / sell / grade ──────────────────────────────────── -->
+<div class="action-panel">
+
+    <details class="action-block" {% if not is_candidate and card.status != 'sold' %}open{% endif %}>
+        <summary>Edit card</summary>
+        <form method="post" action="{{ url_for('ledger.card_edit', item_id=card.item_id) }}">
+            <div class="form-grid">
+                <label>Status
+                    <select name="status">
+                        {% for s in statuses %}
+                        <option value="{{ s }}" {{ 'selected' if s == card.status }}>{{ s }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>Condition
+                    <select name="condition">
+                        <option value="">—</option>
+                        {% for c in ['NM','LP','MP','HP','DMG','sealed'] %}
+                        <option value="{{ c }}" {{ 'selected' if c == card.condition }}>{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>Storage location
+                    <input type="text" name="storage_location" value="{{ card.storage_location or '' }}" placeholder="Binder A · pg 3">
+                </label>
+                <label>Market value
+                    <input type="number" step="0.01" name="market_value" value="{{ card.market_value if card.market_value is not none else '' }}">
+                </label>
+                <label>Est. graded (slab) value
+                    <input type="number" step="0.01" name="graded_value_est" value="{{ card.graded_value_est if card.graded_value_est is not none else '' }}" placeholder="e.g. PSA 10 price">
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" name="grade_candidate" {{ 'checked' if card.grade_candidate }}> Grade candidate
+                </label>
+                <label class="form-grid-wide">Notes
+                    <input type="text" name="notes" value="{{ card.notes or '' }}">
+                </label>
+            </div>
+            <button type="submit">Save changes</button>
+        </form>
+    </details>
+
+    {% if card.status != 'sold' %}
+    <details class="action-block">
+        <summary>Sell card</summary>
+        <form method="post" action="{{ url_for('ledger.card_sell', item_id=card.item_id) }}">
+            <div class="form-grid">
+                <label>Sale date *<input type="date" name="sale_date" required></label>
+                <label>Channel<input type="text" name="channel" placeholder="eBay, TCGplayer…"></label>
+                <label>Gross price *<input type="number" step="0.01" name="gross_price" required></label>
+                <label>Shipping charged<input type="number" step="0.01" name="shipping_charged" placeholder="0.00"></label>
+            </div>
+            <details class="fee-block">
+                <summary>Optional fees</summary>
+                <div class="form-grid">
+                    <label>Marketplace fee<input type="number" step="0.01" name="marketplace_fee" placeholder="0.00"></label>
+                    <label>Processing fee<input type="number" step="0.01" name="processing_fee" placeholder="0.00"></label>
+                    <label>Promo fee<input type="number" step="0.01" name="promo_fee" placeholder="0.00"></label>
+                    <label>Shipping paid<input type="number" step="0.01" name="shipping_paid" placeholder="0.00"></label>
+                    <label>Supplies<input type="number" step="0.01" name="supplies_cost" placeholder="0.00"></label>
+                </div>
+            </details>
+            <label class="form-grid-wide">Notes<input type="text" name="notes"></label>
+            <button type="submit">Record sale</button>
+        </form>
+    </details>
+    {% endif %}
+
+    <details class="action-block">
+        <summary>Record grading</summary>
+        <form method="post" action="{{ url_for('ledger.card_grade', item_id=card.item_id) }}">
+            <div class="form-grid">
+                <label>Grader
+                    <select name="grader">
+                        <option value="">—</option>
+                        {% for g in ['PSA','BGS','CGC','TAG','SGC','other'] %}
+                        <option value="{{ g }}" {{ 'selected' if g == card.grader }}>{{ g }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>Grade<input type="number" step="0.5" name="grade" value="{{ card.grade if card.grade is not none else '' }}" placeholder="10"></label>
+                <label>Cert number<input type="text" name="cert_number" value="{{ card.cert_number or '' }}"></label>
+                <label>Grade date<input type="date" name="grade_date" value="{{ card.grade_date or '' }}"></label>
+                <label>Grading fee<input type="number" step="0.01" name="grading_fee" value="{{ card.grading_fee if card.grading_fee is not none else '' }}" placeholder="0.00"></label>
+                <label>Grading shipping<input type="number" step="0.01" name="grading_ship" value="{{ card.grading_ship if card.grading_ship is not none else '' }}" placeholder="0.00"></label>
+                <label>Grading extra<input type="number" step="0.01" name="grading_extra" value="{{ card.grading_extra if card.grading_extra is not none else '' }}" placeholder="0.00"></label>
+                <label>New status
+                    <select name="status">
+                        {% for s in ['inventory','keep','grading','listed'] %}
+                        <option value="{{ s }}" {{ 'selected' if s == 'inventory' }}>{{ s }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </div>
+            <button type="submit">Save grading</button>
+        </form>
+    </details>
+
 </div>
 
 <style>
@@ -111,6 +253,78 @@
     .status-keep      { background: rgba(200,216,240,0.15); color: var(--starlight); }
     .status-grading   { background: rgba(201,74,106,0.18); color: var(--red); }
     .status-lost      { background: rgba(61,80,112,0.3);   color: var(--text-dim); }
+
+    /* ── Grade callout ──────────────────────────────────────── */
+    .grade-callout {
+        margin-top: 26px;
+        background: linear-gradient(180deg, rgba(212,168,67,0.08), var(--bg-card));
+        border: 1px solid rgba(212,168,67,0.3);
+        border-radius: var(--radius);
+        padding: 18px 20px;
+    }
+    .grade-callout-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .grade-badge {
+        font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+        color: var(--gold); background: var(--gold-dim);
+        border: 1px solid rgba(212,168,67,0.3); border-radius: 20px; padding: 4px 12px;
+    }
+    .grade-callout.review {
+        background: linear-gradient(180deg, rgba(74,127,212,0.08), var(--bg-card));
+        border-color: rgba(74,127,212,0.3);
+    }
+    .grade-badge.review {
+        color: var(--sapphire); background: var(--sapphire-dim);
+        border-color: rgba(74,127,212,0.3);
+    }
+    .grade-reason { font-size: 0.86rem; color: var(--text-mid); }
+    .grade-upside { margin-top: 12px; font-size: 0.95rem; color: var(--text); }
+    .grade-upside.pos strong { color: var(--green); }
+    .grade-upside.neg strong { color: var(--red); }
+    .grade-upside-note { font-size: 0.76rem; color: var(--text-dim); margin-top: 8px; }
+    .grade-history { margin-top: 14px; border-top: 1px solid var(--border); padding-top: 12px; }
+    .grade-history h5 { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); margin-bottom: 8px; }
+    .grade-history .pos { color: var(--green); }
+    .grade-history .neg { color: var(--red); }
+
+    /* ── Action panel (edit / sell / grade) ─────────────────── */
+    .action-panel { margin-top: 26px; display: flex; flex-direction: column; gap: 12px; }
+    .action-block {
+        background: var(--bg-card); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 4px 18px;
+    }
+    .action-block > summary {
+        cursor: pointer; padding: 14px 0; font-weight: 600; color: var(--text);
+        font-size: 0.92rem; list-style: none;
+    }
+    .action-block > summary::-webkit-details-marker { display: none; }
+    .action-block > summary::before { content: '▸ '; color: var(--gold); }
+    .action-block[open] > summary::before { content: '▾ '; }
+    .action-block form { padding: 4px 0 18px; }
+    .form-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px 16px; margin-bottom: 14px;
+    }
+    .form-grid label, .action-block form > label {
+        display: flex; flex-direction: column; gap: 5px;
+        font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim);
+    }
+    .form-grid-wide { grid-column: 1 / -1; }
+    .checkbox-label { flex-direction: row !important; align-items: center; gap: 8px; text-transform: none; letter-spacing: 0; font-size: 0.85rem; color: var(--text-mid); }
+    .action-block input, .action-block select {
+        background: var(--bg-raised); border: 1px solid var(--border-mid);
+        border-radius: var(--radius-sm); color: var(--text);
+        font-family: 'DM Sans', sans-serif; font-size: 0.9rem; padding: 9px 12px; outline: none;
+    }
+    .action-block input:focus, .action-block select:focus { border-color: var(--gold); }
+    .action-block .checkbox-label input { width: auto; }
+    .fee-block { margin-bottom: 14px; }
+    .fee-block > summary { cursor: pointer; font-size: 0.78rem; color: var(--sapphire); padding: 4px 0; }
+    .action-block button[type="submit"] {
+        background: var(--gold); color: #0a0a0c; border: none; border-radius: var(--radius-sm);
+        font-family: 'DM Sans', sans-serif; font-size: 0.86rem; font-weight: 700;
+        padding: 10px 22px; cursor: pointer; transition: all var(--transition);
+    }
+    .action-block button[type="submit"]:hover { background: var(--gold-light); }
 </style>
 
 {% endblock %}

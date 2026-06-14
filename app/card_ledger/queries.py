@@ -58,10 +58,11 @@ def item_ledger_base() -> str:
             v.market_value,
             v.realized_profit,
             v.sale_date,
+            v.purchase_date,
             i.variant,
             i.collector_number,
             i.image_url,
-            a.game,
+            COALESCE(i.game, a.game) AS game,
             a.description AS acquisition_description
         FROM {s}.v_item_ledger v
         JOIN {s}.item i        ON i.item_id        = v.item_id
@@ -105,13 +106,63 @@ def card_detail_query() -> str:
             i.language,
             i.image_url,
             i.tcgplayer_product_id,
+            i.storage_location,
+            i.cost_basis,
+            i.grade_candidate,
+            i.graded_value_est,
+            i.cert_number,
+            i.grade_date,
+            i.grading_fee,
+            i.grading_ship,
+            i.grading_extra,
+            i.grading_total,
+            i.notes,
             a.description AS acquisition_description,
-            a.game,
+            COALESCE(i.game, a.game) AS game,
             a.product_type
         FROM {s}.v_item_ledger v
         JOIN {s}.item i        ON i.item_id        = v.item_id
         JOIN {s}.acquisition a ON a.acquisition_id = v.acquisition_id
         WHERE v.item_id = :id
+    """
+
+
+def grade_candidates_query() -> str:
+    """Grading candidates (both tiers), best upside / value first."""
+    return f"""
+        SELECT * FROM {_schema()}.v_grade_candidates
+        ORDER BY est_upside DESC NULLS LAST, market_value DESC NULLS LAST, name
+    """
+
+
+def grade_candidate_one_query() -> str:
+    """The candidate row (tier, median_value, est_upside) for a single item, if any."""
+    return f"SELECT * FROM {_schema()}.v_grade_candidates WHERE item_id = :id"
+
+
+def grading_history_for_query() -> str:
+    """Confidence signal: this user's graded copies of the same-named card.
+
+    Returns graded items (sold or held) matching a name, with the realized
+    profit_after_grading when they have sold. Used on the card detail + grading page.
+    """
+    s = _schema()
+    return f"""
+        SELECT
+            i.item_id,
+            i.name,
+            i.grader,
+            i.grade,
+            i.market_value,
+            (i.cost_basis + i.grading_total)                          AS total_basis,
+            s.net_proceeds,
+            s.net_proceeds - (i.cost_basis + i.grading_total)         AS profit_after_grading,
+            s.sale_date
+        FROM {s}.item i
+        LEFT JOIN {s}.sale s ON s.item_id = i.item_id
+        WHERE i.grader IS NOT NULL AND i.name ILIKE :name
+        ORDER BY s.sale_date DESC NULLS LAST, i.item_id DESC
+        LIMIT 5
     """
 
 
@@ -156,7 +207,16 @@ def location_search_query() -> str:
 
 
 def games_query() -> str:
-    return f"SELECT DISTINCT game FROM {_schema()}.acquisition ORDER BY game"
+    """Distinct games for the collection filter — per item (so a mixed lot's
+    Pokémon and Weiss cards both appear), falling back to the acquisition's game."""
+    s = _schema()
+    return f"""
+        SELECT DISTINCT COALESCE(i.game, a.game) AS game
+        FROM {s}.item i
+        JOIN {s}.acquisition a ON a.acquisition_id = i.acquisition_id
+        WHERE COALESCE(i.game, a.game) IS NOT NULL
+        ORDER BY 1
+    """
 
 
 def statuses_query() -> str:

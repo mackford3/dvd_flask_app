@@ -186,6 +186,21 @@
             border-color: var(--gold);
             background: rgba(255,255,255,0.12);
         }
+        .search-container .filter-select {
+            flex: 0 1 170px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            padding: 10px 14px;
+            outline: none;
+            cursor: pointer;
+            transition: border-color var(--transition), background var(--transition);
+        }
+        .search-container .filter-select:focus { border-color: var(--gold); background: rgba(255,255,255,0.12); }
+        .search-container .filter-select option { background: var(--bg-card); color: var(--text); }
         .search-container button[type="submit"],
         .search-container button[type="button"] {
             padding: 10px 20px;

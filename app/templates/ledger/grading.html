@@ -1,0 +1,109 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<header>
+    <h1>Grading &amp; Review</h1>
+</header>
+
+<!-- ── Grade tier ─────────────────────────────────────────── -->
+<section class="tier-section">
+    <h3 class="tier-head tier-grade">◆ Grade — worth slabbing</h3>
+    <p class="tier-intro">Flagged by you, or NM with meaningful raw value. Ranked by estimated upside.</p>
+    {% if not grade %}
+    <p class="empty-note">No grade candidates yet. Flag a card, or set one to NM with a raw value.</p>
+    {% else %}
+    <div class="table-scroll">
+    <table>
+        <thead>
+            <tr><th>Card</th><th>Set</th><th>Cond.</th><th>Raw</th><th>Est. slab</th><th>Upside</th><th>Why</th><th>Your history</th></tr>
+        </thead>
+        <tbody>
+            {% for c in grade %}
+            <tr>
+                <td class="title-cell">
+                    <a href="{{ url_for('ledger.card_detail', item_id=c.item_id) }}" class="movie-link">
+                        <strong>{{ c.name }}</strong><span class="hover-tip">Manage ↗</span>
+                    </a>
+                </td>
+                <td>{% if c.set_code %}<code>{{ c.set_code }}</code>{% endif %}</td>
+                <td>{{ c.condition or '—' }}</td>
+                <td>${{ "{:,.2f}".format(c.market_value or 0) }}</td>
+                <td>{% if c.graded_value_est is not none %}${{ "{:,.2f}".format(c.graded_value_est) }}{% else %}—{% endif %}</td>
+                <td>{% if c.est_upside is not none %}<span class="{{ 'pos' if c.est_upside >= 0 else 'neg' }}">${{ "{:,.2f}".format(c.est_upside) }}</span>{% else %}—{% endif %}</td>
+                <td class="why-cell">{{ c.reason }}</td>
+                <td class="history-cell">
+                    {% if c.history %}
+                        {% for h in c.history %}
+                        <span class="hist-chip {{ 'pos' if (h.profit_after_grading or 0) >= 0 else 'neg' }}">
+                            {{ h.grader }} {{ h.grade }}{% if h.profit_after_grading is not none %} · ${{ "{:,.2f}".format(h.profit_after_grading) }}{% endif %}
+                        </span>
+                        {% endfor %}
+                    {% else %}<span class="hist-none">no prior grades</span>{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% endif %}
+</section>
+
+<!-- ── Review tier ────────────────────────────────────────── -->
+<section class="tier-section">
+    <h3 class="tier-head tier-review">👁 Review — worth a look</h3>
+    <p class="tier-intro">Box outliers (≥ 3× the box's median value) — maybe a sleeper, probably not slab-worthy.</p>
+    {% if not review %}
+    <p class="empty-note">No outliers right now — every box is fairly uniform.</p>
+    {% else %}
+    <div class="table-scroll">
+    <table>
+        <thead>
+            <tr><th>Card</th><th>Set</th><th>Cond.</th><th>Raw</th><th>vs box</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+            {% for c in review %}
+            <tr>
+                <td class="title-cell">
+                    <a href="{{ url_for('ledger.card_detail', item_id=c.item_id) }}" class="movie-link">
+                        <strong>{{ c.name }}</strong><span class="hover-tip">Manage ↗</span>
+                    </a>
+                </td>
+                <td>{% if c.set_code %}<code>{{ c.set_code }}</code>{% endif %}</td>
+                <td>{{ c.condition or '—' }}</td>
+                <td>${{ "{:,.2f}".format(c.market_value or 0) }}</td>
+                <td>{% if c.median_value %}{{ "%.1f"|format((c.market_value|float) / (c.median_value|float)) }}× <span class="median-note">(med ${{ "%.2f"|format(c.median_value|float) }})</span>{% else %}—{% endif %}</td>
+                <td class="why-cell">{{ c.reason }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% endif %}
+</section>
+
+<style>
+    .tier-section { margin-bottom: 38px; }
+    .tier-head {
+        font-size: 0.95rem; font-weight: 700; padding-bottom: 10px;
+        border-bottom: 1px solid var(--border); margin-bottom: 6px;
+    }
+    .tier-grade  { color: var(--gold); }
+    .tier-review { color: var(--sapphire); }
+    .tier-intro { color: var(--text-mid); font-size: 0.84rem; margin-bottom: 16px; }
+    .empty-note { color: var(--text-dim); padding: 12px 0 8px; font-size: 0.9rem; }
+    td.pos, span.pos { color: var(--green); }
+    td.neg, span.neg { color: var(--red); }
+    .why-cell { font-size: 0.82rem; color: var(--text-mid); }
+    .median-note { color: var(--text-dim); font-size: 0.78rem; }
+    .history-cell { display: flex; flex-wrap: wrap; gap: 5px; }
+    .hist-chip {
+        font-size: 0.72rem; padding: 2px 8px; border-radius: 20px;
+        background: var(--bg-raised); border: 1px solid var(--border);
+    }
+    .hist-chip.pos { color: var(--green); border-color: rgba(74,201,148,0.25); }
+    .hist-chip.neg { color: var(--red);   border-color: rgba(201,74,106,0.25); }
+    .hist-none { font-size: 0.75rem; color: var(--text-dim); }
+</style>
+
+{% endblock %}

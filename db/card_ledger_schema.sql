@@ -26,7 +26,7 @@ CREATE TABLE acquisition (
     acquisition_id  bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     purchase_date   date        NOT NULL,
     description     text        NOT NULL,                 -- "Frieren Booster Box (WS, EN)"
-    game            text        NOT NULL CHECK (game IN ('mtg','weiss','other')),
+    game            text        NOT NULL CHECK (game IN ('mtg','weiss','pokemon','other','mixed')),
     product_type    text        NOT NULL CHECK (product_type IN
                                     ('sealed_box','sealed_pack','bundle','single','bulk_lot','other')),
     set_code        text,                                 -- set / expansion identifier
@@ -75,6 +75,7 @@ CREATE TABLE item (
 
     -- Identity
     name                text   NOT NULL,
+    game                text   CHECK (game IS NULL OR game IN ('mtg','weiss','pokemon','other')),
     set_code            text,
     collector_number    text,
     variant             text,                              -- 'foil','showcase','SP','SSP', etc.
@@ -103,6 +104,8 @@ CREATE TABLE item (
 
     status              text   NOT NULL DEFAULT 'inventory'
                             CHECK (status IN ('inventory','listed','sold','keep','grading','lost')),
+    grade_candidate     boolean NOT NULL DEFAULT false,    -- triage flag: "this should be graded"
+    graded_value_est    numeric(12,2),                     -- optional est. slab value -> grading upside
     storage_location    text,                              -- e.g. a 3D-printed tray / binder slot
     tcgplayer_product_id text,                             -- from CSV 'Product ID'; for re-pricing
     image_url           text,                              -- from CSV 'Photo URL'; for the catalog site
@@ -304,5 +307,45 @@ SELECT
 FROM item i
 JOIN sale s ON s.item_id = i.item_id
 WHERE i.grader IS NOT NULL;
+
+-- Cards to grade or at least look at, in two tiers (grade takes precedence):
+--   grade  = slab-worthy: user-flagged OR (NM AND raw value >= 25)
+--   review = box outlier: raw value >= 3x the acquisition's median value (floor 0.50)
+-- Only ungraded, still-owned cards. est_upside is NULL until a slab estimate is set.
+-- Constants 25 / 3 / 0.50 / 30 are mirrored in routes/ledger.py — keep in sync if tuned.
+CREATE VIEW v_grade_candidates AS
+WITH box AS (
+    SELECT acquisition_id,
+           percentile_cont(0.5) WITHIN GROUP (ORDER BY market_value) AS median_value
+    FROM item
+    WHERE market_value IS NOT NULL
+    GROUP BY acquisition_id
+)
+SELECT
+    i.item_id,
+    i.acquisition_id,
+    i.name,
+    i.set_code,
+    i.condition,
+    i.market_value,
+    i.graded_value_est,
+    i.grade_candidate,
+    (i.cost_basis + i.grading_total)              AS total_basis,
+    (i.graded_value_est - i.market_value - 30)    AS est_upside,
+    b.median_value,
+    CASE
+        WHEN i.grade_candidate
+             OR (i.condition = 'NM' AND i.market_value >= 25)          THEN 'grade'
+        WHEN i.market_value >= 0.50 AND b.median_value > 0
+             AND i.market_value >= 3 * b.median_value                  THEN 'review'
+    END                                           AS tier
+FROM item i
+LEFT JOIN box b ON b.acquisition_id = i.acquisition_id
+WHERE i.grader IS NULL
+  AND i.status IN ('inventory','keep')
+  AND ( i.grade_candidate
+        OR (i.condition = 'NM' AND i.market_value >= 25)
+        OR (i.market_value >= 0.50 AND b.median_value > 0
+            AND i.market_value >= 3 * b.median_value) );
 
 COMMIT;
