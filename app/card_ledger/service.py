@@ -33,6 +33,14 @@ def _int_or_none(value):
         return None
 
 
+def _pos_int_or_none(value):
+    """Like _int_or_none, but maps non-positive (0/blank) to None — for columns
+    constrained > 0 (packs_total, cards_per_pack), where 0 means 'not applicable'
+    (e.g. a bulk lot / tin has no packs)."""
+    n = _int_or_none(value)
+    return n if (n is not None and n > 0) else None
+
+
 def _detect_game(form, parsed):
     """Acquisition-level game from the parsed CSV: 'mixed' if it spans games, the
     single game if uniform, else the form's choice (manual entry / no Product Line)."""
@@ -51,7 +59,7 @@ def build_acquisition(form, parsed):
     confirms is exactly what gets written.
     """
     product_type = form.get('product_type', 'sealed_box')
-    packs_total = _int_or_none(form.get('packs_total'))
+    packs_total = _pos_int_or_none(form.get('packs_total'))
     packs_now = _int_or_none(form.get('packs_now'))
 
     game = _detect_game(form, parsed)
@@ -79,7 +87,7 @@ def build_acquisition(form, parsed):
         'set_code':       parsed.get('set_code'),
         'language':       form.get('language') or 'EN',
         'packs_total':    packs_total,
-        'cards_per_pack': _int_or_none(form.get('cards_per_pack')),
+        'cards_per_pack': _pos_int_or_none(form.get('cards_per_pack')),
         'packs_opened':   packs_opened,
         'purchase_price': _money(form.get('price')),
         'tax':            _money(form.get('tax')),
