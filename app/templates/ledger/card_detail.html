@@ -2,6 +2,8 @@
 
 {% block content %}
 
+<a href="javascript:history.back()" class="back-btn">← Back</a>
+
 <header>
     <h1>{{ card.name }}</h1>
 </header>
@@ -210,6 +212,12 @@
 </div>
 
 <style>
+    .back-btn {
+        display: inline-block; font-size: 0.82rem; color: var(--text-dim);
+        text-decoration: none; margin-bottom: 18px; letter-spacing: 0.02em;
+        transition: color var(--transition);
+    }
+    .back-btn:hover { color: var(--gold); }
     .card-detail { display: flex; gap: 28px; flex-wrap: wrap; }
     .card-detail-img {
         position: relative;
