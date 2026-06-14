@@ -21,7 +21,17 @@ from card_ledger.queries import (
     appendable_acquisitions_query,
     games_query,
     statuses_query,
+    grade_candidates_query,
+    grade_candidate_one_query,
+    grading_history_for_query,
 )
+
+# Grading-candidate tuning constants — mirror v_grade_candidates in the schema.
+GRADE_VALUE_THRESHOLD = 25     # raw market value at/above which an NM card is a grade candidate
+ASSUMED_GRADING_COST  = 30     # used for est_upside when a slab estimate is entered
+REVIEW_MULTIPLE       = 3      # review tier: value >= this * the box median
+REVIEW_FLOOR          = 0.50   # review tier: minimum absolute value to bother
+ITEM_STATUSES = ['inventory', 'listed', 'keep', 'grading', 'sold', 'lost']
 
 ledger_bp = Blueprint('ledger', __name__, url_prefix='/ledger')
 
@@ -34,8 +44,22 @@ def _fetch_one(sql: str, params: dict = None):
     return db.session.execute(text(sql), params or {}).mappings().first()
 
 
-def _build_collection_sql(name: str, game: str, status: str) -> tuple:
-    """Filter the per-item ledger by name (ILIKE), game, and status."""
+# Whitelisted sort options (label shown in the UI -> trusted ORDER BY clause).
+# Keys are validated against this dict, so the value is never user-controlled SQL.
+COLLECTION_SORTS = {
+    'name':         ('Name (A–Z)',        'name ASC'),
+    'value_desc':   ('Value (high→low)',  'market_value DESC NULLS LAST'),
+    'value_asc':    ('Value (low→high)',  'market_value ASC NULLS LAST'),
+    'acquired_desc':('Newest acquired',   'purchase_date DESC NULLS LAST, name ASC'),
+    'acquired_asc': ('Oldest acquired',   'purchase_date ASC NULLS LAST, name ASC'),
+    'basis_desc':   ('Cost basis (high→low)', 'total_basis DESC NULLS LAST'),
+    'status':       ('Status',            'status ASC, name ASC'),
+}
+DEFAULT_SORT = 'name'
+
+
+def _build_collection_sql(name: str, game: str, status: str, sort: str) -> tuple:
+    """Filter the per-item ledger by name (ILIKE), game, and status, then sort."""
     sql = f"SELECT * FROM ({item_ledger_base()}) AS sub WHERE 1=1"
     params = {}
 
@@ -49,7 +73,8 @@ def _build_collection_sql(name: str, game: str, status: str) -> tuple:
         sql += " AND status = :status"
         params['status'] = status
 
-    sql += " ORDER BY name"
+    order_by = COLLECTION_SORTS.get(sort, COLLECTION_SORTS[DEFAULT_SORT])[1]
+    sql += f" ORDER BY {order_by}"
     return sql, params
 
 
@@ -71,9 +96,12 @@ def collection():
     name_query   = request.args.get('name', '').strip()
     game_query   = request.args.get('game', '').strip()
     status_query = request.args.get('status', '').strip()
+    sort_query   = request.args.get('sort', DEFAULT_SORT)
+    if sort_query not in COLLECTION_SORTS:
+        sort_query = DEFAULT_SORT
     view         = request.args.get('view', 'grid')
 
-    sql, params = _build_collection_sql(name_query, game_query, status_query)
+    sql, params = _build_collection_sql(name_query, game_query, status_query, sort_query)
     cards = _fetch(sql, params)
 
     return render_template(
@@ -84,8 +112,29 @@ def collection():
         name_query=name_query,
         game_query=game_query,
         status_query=status_query,
+        sort_query=sort_query,
+        sort_options=COLLECTION_SORTS,
         view=view if view in ('grid', 'table') else 'grid',
     )
+
+
+def _grade_reason(cand) -> str:
+    """Tier-aware 'why', built from the v_grade_candidates row."""
+    mv = float(cand.get('market_value') or 0)
+    if cand.get('tier') == 'review':
+        med = float(cand.get('median_value') or 0)
+        mult = (mv / med) if med else 0
+        return f"${mv:,.2f} raw — {mult:.1f}× the box median (${med:,.2f})"
+    # grade tier
+    reasons = []
+    if cand.get('condition') == 'NM':
+        reasons.append('NM condition')
+    if mv >= GRADE_VALUE_THRESHOLD:
+        reasons.append(f"${mv:,.0f} raw value")
+    if cand.get('grade_candidate'):
+        reasons.append('flagged by you')
+    reasons.append('ungraded')
+    return ' · '.join(reasons)
 
 
 @ledger_bp.route('/card/<int:item_id>')
@@ -93,13 +142,68 @@ def card_detail(item_id):
     card = _fetch_one(card_detail_query(), {'id': item_id})
     if not card:
         return render_template('404.html'), 404
-    return render_template('ledger/card_detail.html', card=card)
+
+    # Single source of truth for candidacy: the view row (tier/median/upside).
+    cand = _fetch_one(grade_candidate_one_query(), {'id': item_id})
+    upside = None
+    if cand and cand.get('est_upside') is not None:
+        upside = float(cand['est_upside'])
+    history = _fetch(grading_history_for_query(), {'name': card['name']})
+
+    return render_template(
+        'ledger/card_detail.html',
+        card=card,
+        statuses=ITEM_STATUSES,
+        tier=cand['tier'] if cand else None,
+        grade_reason=_grade_reason(cand) if cand else None,
+        upside=upside,
+        history=history,
+    )
+
+
+@ledger_bp.route('/card/<int:item_id>/edit', methods=['POST'])
+def card_edit(item_id):
+    service.update_item(item_id, request.form)
+    return redirect(url_for('ledger.card_detail', item_id=item_id))
+
+
+@ledger_bp.route('/card/<int:item_id>/sell', methods=['POST'])
+def card_sell(item_id):
+    service.record_sale(item_id, request.form)
+    return redirect(url_for('ledger.card_detail', item_id=item_id))
+
+
+@ledger_bp.route('/card/<int:item_id>/grade', methods=['POST'])
+def card_grade(item_id):
+    service.set_grading(item_id, request.form)
+    return redirect(url_for('ledger.card_detail', item_id=item_id))
+
+
+@ledger_bp.route('/box/<int:acquisition_id>/set-location', methods=['POST'])
+def box_set_location(acquisition_id):
+    service.bulk_set_location(acquisition_id, request.form.get('storage_location', ''))
+    return redirect(url_for('ledger.box_detail', acquisition_id=acquisition_id))
+
+
+@ledger_bp.route('/grading')
+def grading():
+    candidates = _fetch(grade_candidates_query())
+    grade, review = [], []
+    for c in candidates:
+        d = dict(c)
+        d['reason'] = _grade_reason(c)
+        if c['tier'] == 'grade':
+            d['history'] = _fetch(grading_history_for_query(), {'name': c['name']})
+            grade.append(d)
+        elif c['tier'] == 'review':
+            review.append(d)
+    return render_template('ledger/grading.html', grade=grade, review=review)
 
 
 # --- CSV import: upload -> preview -> confirm/commit -------------------------
 
 PRODUCT_TYPES = ['sealed_box', 'sealed_pack', 'bundle', 'bulk_lot']
-GAMES = ['weiss', 'mtg', 'other']
+GAMES = ['weiss', 'pokemon', 'mtg', 'other']
 
 _UPLOAD_DIR = os.path.join(tempfile.gettempdir(), 'ledger_uploads')
 

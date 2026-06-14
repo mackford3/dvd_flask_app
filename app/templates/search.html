@@ -1,5 +1,4 @@
 {% extends "layout.html" %}
-{% from "macros/search_form.html" import search_form %}
 
 {% block content %}
 
@@ -7,7 +6,19 @@
     <h1>Seek a Tale</h1>
 </header>
 
-{{ search_form(show_location=True) }}
+<section class="search-container">
+    <form action="{{ url_for('search.search') }}" method="GET">
+        <input type="text" name="name" value="{{ name_query }}" placeholder="Seek a tale by name...">
+        <input type="text" name="location" value="{{ location_query }}" placeholder="Search by location...">
+        <select name="sort" class="filter-select">
+            {% for key, opt in sort_options.items() %}
+            <option value="{{ key }}" {{ 'selected' if key == sort_query }}>{{ opt[0] }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Seek</button>
+        <a href="{{ url_for('search.search') }}"><button type="button">Clear</button></a>
+    </form>
+</section>
 
 <h3>Tales Found</h3>
 

@@ -15,6 +15,40 @@ CONDITION_MAP = {
 SEALED_TYPES = {"sealed_box", "sealed_pack", "bundle", "bulk_lot"}
 PAID_COLUMN_NAMES = {"paid", "cost", "purchase price", "my cost", "price paid", "paid price"}
 
+# TCGplayer 'Product Line' -> our game code. Unknown lines fall back to 'other'.
+PRODUCT_LINE_GAME = {
+    "pokemon": "pokemon",
+    "weiss schwarz": "weiss",
+    "magic": "mtg",
+    "magic: the gathering": "mtg",
+}
+
+
+def game_from_product_line(product_line):
+    return PRODUCT_LINE_GAME.get((product_line or "").strip().lower(), "other")
+
+
+def strip_rarity(number_field, rarity):
+    """Collector number from the Number column, dropping a trailing rarity token
+    only when it equals the Rarity column. 'SFN/S108-E006 R' + rarity 'R' ->
+    'SFN/S108-E006'; '064/113' + rarity 'Common' -> '064/113' (unchanged)."""
+    if not number_field:
+        return None
+    n = number_field.strip()
+    if rarity:
+        head, _, tail = n.rpartition(" ")
+        if head and tail.strip().lower() == rarity.strip().lower():
+            return head.strip()
+    return n
+
+
+def set_code_for(game, collector_number, set_name):
+    """Game-aware set code. Weiss embeds it in the number ('SFN/S108-E006' ->
+    'SFN/S108'); every other game uses the CSV 'Set Name' column."""
+    if game == "weiss" and collector_number and "-" in collector_number:
+        return collector_number.split("-")[0]
+    return set_name or None
+
 
 def _num(value):
     """Parse a money/number string to float, or None if blank/invalid."""
@@ -76,15 +110,21 @@ def parse_csv(text_or_bytes):
     total_value = 0.0
     sum_paid = 0.0
     paid_seen = False
+    games_seen = set()
 
     for row in reader:
         name = _get(row, "Product Name", "Title")
         if not name:
             continue
-        code, set_code = parse_number(_get(row, "Number"))
-        box_set_code = box_set_code or set_code
+
+        game = game_from_product_line(_get(row, "Product Line"))
+        games_seen.add(game)
 
         rarity, printing = _get(row, "Rarity"), _get(row, "Printing")
+        code = strip_rarity(_get(row, "Number"), rarity)
+        set_code = set_code_for(game, code, _get(row, "Set Name"))
+        box_set_code = box_set_code or set_code
+
         variant = rarity
         if printing and printing.lower() != "normal":
             variant = (rarity + " " + printing).strip()
@@ -111,6 +151,7 @@ def parse_csv(text_or_bytes):
         for _ in range(qty):
             items.append({
                 "name": name,
+                "game": game,
                 "set_code": set_code,
                 "collector_number": code,
                 "variant": variant or None,
@@ -130,6 +171,8 @@ def parse_csv(text_or_bytes):
         "items": items,
         "n_cards": len(items),
         "set_code": box_set_code,
+        "games": sorted(games_seen),
+        "mixed": len(games_seen) > 1,
         "total_value": round(total_value, 2),
         "sum_paid": round(sum_paid, 2),
         "paid_seen": paid_seen,
@@ -152,6 +195,7 @@ def build_manual(rows):
     total_value = 0.0
     sum_paid = 0.0
     paid_seen = False
+    games_seen = set()
 
     for r in rows:
         name = (r.get("name") or "").strip()
@@ -159,6 +203,9 @@ def build_manual(rows):
             continue
         set_code = (r.get("set_code") or "").strip() or None
         set_code0 = set_code0 or set_code
+        game = (r.get("game") or "").strip().lower() or None
+        if game:
+            games_seen.add(game)
         price = _num(r.get("market_value"))
         paid_val = _num(r.get("paid"))
         if paid_val is not None:
@@ -177,6 +224,7 @@ def build_manual(rows):
         for _ in range(qty):
             items.append({
                 "name": name,
+                "game": game,
                 "set_code": set_code,
                 "collector_number": (r.get("collector_number") or "").strip() or None,
                 "variant": (r.get("variant") or "").strip() or None,
@@ -191,6 +239,8 @@ def build_manual(rows):
         "items": items,
         "n_cards": len(items),
         "set_code": set_code0,
+        "games": sorted(games_seen),
+        "mixed": len(games_seen) > 1,
         "total_value": round(total_value, 2),
         "sum_paid": round(sum_paid, 2),
         "paid_seen": paid_seen,

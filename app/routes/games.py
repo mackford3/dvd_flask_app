@@ -100,7 +100,21 @@ def home():
     )
 
 
-def _build_search_sql(name: str, location: str) -> tuple:
+# Whitelisted sort options (label -> trusted ORDER BY). Keys are validated, so
+# the clause is never user-controlled SQL.
+SEARCH_SORTS = {
+    'title':         ('Title (A–Z)',       'title ASC'),
+    'acquired_desc': ('Newest acquired',   'purchase_date DESC NULLS LAST, title ASC'),
+    'acquired_asc':  ('Oldest acquired',   'purchase_date ASC NULLS LAST, title ASC'),
+    'cost_desc':     ('Cost (high→low)',   'cost DESC NULLS LAST'),
+    'cost_asc':      ('Cost (low→high)',   'cost ASC NULLS LAST'),
+    'platform':      ('Platform',          'platform ASC, title ASC'),
+    'year_desc':     ('Newest release',    'release_year DESC NULLS LAST, title ASC'),
+}
+DEFAULT_SORT = 'title'
+
+
+def _build_search_sql(name: str, location: str, sort: str = DEFAULT_SORT) -> tuple:
     sql = f"SELECT * FROM ({base_query()}) AS sub WHERE 1=1"
     params = {}
 
@@ -112,7 +126,8 @@ def _build_search_sql(name: str, location: str) -> tuple:
         sql += " AND location_label ILIKE :loc"
         params['loc'] = f"%{location}%"
 
-    sql += " ORDER BY title"
+    order_by = SEARCH_SORTS.get(sort, SEARCH_SORTS[DEFAULT_SORT])[1]
+    sql += f" ORDER BY {order_by}"
     return sql, params
 
 
@@ -120,11 +135,21 @@ def _build_search_sql(name: str, location: str) -> tuple:
 def search():
     name_query     = request.args.get('name', '').strip()
     location_query = request.args.get('location', '').strip()
+    sort_query     = request.args.get('sort', DEFAULT_SORT)
+    if sort_query not in SEARCH_SORTS:
+        sort_query = DEFAULT_SORT
 
-    sql, params = _build_search_sql(name_query, location_query)
+    sql, params = _build_search_sql(name_query, location_query, sort_query)
     results = _fetch(sql, params)
 
-    return render_template('games/search.html', search_games=results)
+    return render_template(
+        'games/search.html',
+        search_games=results,
+        name_query=name_query,
+        location_query=location_query,
+        sort_query=sort_query,
+        sort_options=SEARCH_SORTS,
+    )
 
 
 @games_bp.route('/game/<int:title_id>')

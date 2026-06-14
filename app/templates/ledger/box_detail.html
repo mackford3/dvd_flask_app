@@ -52,7 +52,7 @@
     <div class="carousel-card">
         <h4>Breakdown</h4>
         <ul class="stat-list">
-            <li><span>Cards</span> <strong>{{ pl.items }}</strong></li>
+            <li><span>Cards</span> <strong>{{ pl['items'] }}</strong></li>
             <li><span>EV at Open</span> <strong>${{ "{:,.2f}".format(pl.ev_at_open or 0) }}</strong></li>
             <li><span>Realized Net</span> <strong>${{ "{:,.2f}".format(pl.realized_net or 0) }}</strong></li>
             <li><span>Unsold Value</span> <strong>${{ "{:,.2f}".format(pl.unsold_value or 0) }}</strong></li>
@@ -60,6 +60,13 @@
         </ul>
     </div>
 </div>
+
+<!-- Bulk storage location for the whole box -->
+<form class="bulk-loc" method="post" action="{{ url_for('ledger.box_set_location', acquisition_id=acquisition.acquisition_id) }}">
+    <label for="bulk_loc">Set location for all {{ items|length }} cards</label>
+    <input type="text" id="bulk_loc" name="storage_location" placeholder="Binder A · shelf 2">
+    <button type="submit">Apply to all</button>
+</form>
 
 <!-- Cards in this acquisition -->
 <h3>Cards ({{ items|length }})</h3>
@@ -73,6 +80,7 @@
             <th>Basis</th>
             <th>Market</th>
             <th>Status</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -89,6 +97,7 @@
             <td>${{ "{:,.2f}".format(c.total_basis or 0) }}</td>
             <td>${{ "{:,.2f}".format(c.market_value or 0) }}</td>
             <td><span class="status-badge status-{{ c.status }}">{{ c.status }}</span></td>
+            <td><a href="{{ url_for('ledger.card_detail', item_id=c.item_id) }}" class="manage-link">Sell / Grade →</a></td>
         </tr>
         {% else %}
         <tr><td colspan="6">No cards recorded for this acquisition.</td></tr>
@@ -98,6 +107,26 @@
 </div>
 
 <style>
+    .bulk-loc {
+        display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+        background: var(--bg-card); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 14px 18px; margin: 8px 0 24px;
+    }
+    .bulk-loc label { font-size: 0.78rem; color: var(--text-mid); white-space: nowrap; }
+    .bulk-loc input {
+        flex: 1 1 200px; background: var(--bg-raised); border: 1px solid var(--border-mid);
+        border-radius: var(--radius-sm); color: var(--text);
+        font-family: 'DM Sans', sans-serif; font-size: 0.9rem; padding: 9px 12px; outline: none;
+    }
+    .bulk-loc input:focus { border-color: var(--gold); }
+    .bulk-loc button {
+        background: var(--gold); color: #0a0a0c; border: none; border-radius: var(--radius-sm);
+        font-family: 'DM Sans', sans-serif; font-size: 0.84rem; font-weight: 700;
+        padding: 9px 18px; cursor: pointer; white-space: nowrap;
+    }
+    .manage-link { font-size: 0.78rem; color: var(--sapphire); text-decoration: none; white-space: nowrap; }
+    .manage-link:hover { color: var(--gold); }
+
     .meta-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 28px; }
     .meta-pill {
         font-size: 0.76rem; color: var(--text-mid);
