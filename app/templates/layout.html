@@ -599,5 +599,95 @@
 <!-- Bottom Nav (context-aware: catalog vs ledger) -->
 {{ bottom_nav() }}
 
+<!-- ── Click-to-sort for every data table ─────────────────────────────────── -->
+<style>
+    table th.th-sort { cursor: pointer; user-select: none; white-space: nowrap; transition: color 120ms ease; }
+    table th.th-sort:hover { color: var(--gold); }
+    table th .sort-arrow { font-size: 0.8em; margin-left: 4px; opacity: 0.35; }
+    table th.sorted-asc .sort-arrow, table th.sorted-desc .sort-arrow { opacity: 1; color: var(--gold); }
+</style>
+<script>
+(function () {
+    function parseNum(s) {
+        if (s == null) return NaN;
+        var t = s.replace(/[$,%\s×]/g, '');
+        if (t === '' || t === '—' || t === '-') return NaN;
+        var v = parseFloat(t);
+        return isNaN(v) ? NaN : v;
+    }
+    function cellText(row, i) {
+        var c = row.cells[i];
+        return c ? c.textContent.trim() : '';
+    }
+    function columnIsNumeric(rows, i) {
+        var sawOne = false;
+        for (var r = 0; r < rows.length; r++) {
+            var raw = cellText(rows[r], i);
+            if (raw === '' || raw === '—' || raw === '-') continue;
+            if (isNaN(parseNum(raw))) return false;
+            sawOne = true;
+        }
+        return sawOne;
+    }
+    function makeSortable(table) {
+        if (table.querySelector('input, select, textarea')) return;   // skip form tables
+        var thead = table.tHead, tbody = table.tBodies[0];
+        if (!thead || !tbody || !thead.rows.length) return;
+        var headRow = thead.rows[thead.rows.length - 1];
+
+        Array.prototype.forEach.call(headRow.cells, function (th, idx) {
+            if (!th.textContent.trim()) return;                       // skip empty (action) cols
+            th.classList.add('th-sort');
+            var arrow = document.createElement('span');
+            arrow.className = 'sort-arrow';
+            arrow.textContent = '↕';
+            th.appendChild(arrow);
+
+            th.addEventListener('click', function () {
+                var rows = Array.prototype.slice.call(tbody.rows).filter(function (r) {
+                    return r.cells.length > idx;
+                });
+                if (!rows.length) return;
+                var numeric = columnIsNumeric(rows, idx);
+                // toggle; first click = desc for numbers (highest first), asc for text
+                var prev = table.getAttribute('data-sort-col');
+                var asc;
+                if (prev === String(idx)) {
+                    asc = table.getAttribute('data-sort-dir') !== 'asc';
+                } else {
+                    asc = !numeric;
+                }
+                rows.sort(function (a, b) {
+                    var av = cellText(a, idx), bv = cellText(b, idx), r;
+                    if (numeric) {
+                        var x = parseNum(av), y = parseNum(bv);
+                        if (isNaN(x)) x = -Infinity;
+                        if (isNaN(y)) y = -Infinity;
+                        r = x - y;
+                    } else {
+                        r = av.localeCompare(bv, undefined, { numeric: true, sensitivity: 'base' });
+                    }
+                    return asc ? r : -r;
+                });
+                rows.forEach(function (r) { tbody.appendChild(r); });
+
+                table.setAttribute('data-sort-col', idx);
+                table.setAttribute('data-sort-dir', asc ? 'asc' : 'desc');
+                Array.prototype.forEach.call(headRow.cells, function (h) {
+                    h.classList.remove('sorted-asc', 'sorted-desc');
+                    var a = h.querySelector('.sort-arrow');
+                    if (a) a.textContent = '↕';
+                });
+                th.classList.add(asc ? 'sorted-asc' : 'sorted-desc');
+                arrow.textContent = asc ? '▲' : '▼';
+            });
+        });
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('table').forEach(makeSortable);
+    });
+})();
+</script>
+
 </body>
 </html>
